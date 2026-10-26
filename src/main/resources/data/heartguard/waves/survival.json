@@ -1,0 +1,21 @@
+{
+	"waves": [
+		{
+			"spawns": [
+				{ "spawn": 0, "mob": "minecraft:husk", "count": 5, "interval_ticks": 40 }
+			]
+		},
+		{
+			"spawns": [
+				{ "spawn": 0, "mob": "minecraft:husk", "count": 8, "interval_ticks": 30 },
+				{ "spawn": 0, "mob": "minecraft:spider", "count": 3, "interval_ticks": 60, "delay_ticks": 100 }
+			]
+		},
+		{
+			"spawns": [
+				{ "spawn": 0, "mob": "minecraft:husk", "count": 12, "interval_ticks": 20 },
+				{ "spawn": 0, "mob": "minecraft:skeleton", "count": 4, "interval_ticks": 50, "delay_ticks": 60 }
+			]
+		}
+	]
+}

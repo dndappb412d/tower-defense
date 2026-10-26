@@ -2,6 +2,8 @@ package dev.vadim.heartguard.match;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import dev.vadim.heartguard.wave.WaveSet;
+import dev.vadim.heartguard.wave.WaveSets;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import dev.vadim.heartguard.block.ModBlocks;
@@ -73,7 +75,12 @@ public final class MatchCommands {
 			source.sendFailure(Component.literal("Cannot start: " + check));
 			return 0;
 		}
-		Match.update(source.getServer(), MatchData::started);
+		WaveSet set = WaveSets.active();
+		if (set == null) {
+			source.sendFailure(Component.literal("Cannot start: wave set " + WaveSets.activeId() + " is not loaded"));
+			return 0;
+		}
+		Match.update(source.getServer(), d -> d.started(set.waves().size()));
 		return 1;
 	}
 
@@ -94,7 +101,7 @@ public final class MatchCommands {
 	private static int status(CommandSourceStack source) {
 		MatchData d = Match.get(source.getServer());
 		return reply(source, "phase=" + d.phase() + " wave=" + d.wave() + " heartHp=" + d.heartHp()
-			+ " ticksLeft=" + d.ticksLeft() + " heart=" + d.heart().map(BlockPos::toShortString).orElse("unset")
+			+ " waves=" + d.wave() + "/" + d.totalWaves() + " ticksLeft=" + d.ticksLeft() + " heart=" + d.heart().map(BlockPos::toShortString).orElse("unset")
 			+ " spawns=" + d.spawns().size());
 	}
 }
