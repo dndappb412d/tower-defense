@@ -4,6 +4,7 @@ import dev.vadim.heartguard.block.ModBlocks;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.placement.PlacementService;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
@@ -23,6 +24,7 @@ public class Heartguard implements ModInitializer {
 			LOGGER.debug("Place marker at {} for {}: {}", payload.pos(), context.player().getName().getString(), result);
 		});
 		ModBlocks.init();
+		WaveSets.init();
 		Match.init();
 		MatchCommands.init();
 		LOGGER.info("Heartguard initialized (common)");
