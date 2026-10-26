@@ -57,6 +57,7 @@ public class HeartSeekGoalGameTest {
 
 	/** A flat stone floor so navigation has something to walk on; small, to stay inside the chunks the test keeps loaded. */
 	private static void buildFloor(GameTestHelper context) {
+		TestArena.forceLoad(context, new BlockPos(-6, 0, -6), new BlockPos(10, 4, 6));
 		for (int x = -4; x <= 8; x++) {
 			for (int z = -4; z <= 4; z++) {
 				context.setBlock(new BlockPos(x, 0, z), Blocks.STONE);

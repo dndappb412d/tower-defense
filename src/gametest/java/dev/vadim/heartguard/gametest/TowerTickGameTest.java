@@ -22,6 +22,7 @@ public class TowerTickGameTest {
 	@GameTest(maxTicks = 400)
 	public void aPlacedTowerShootsOnItsOwn(GameTestHelper context) {
 		ServerLevel level = context.getLevel();
+		TestArena.forceLoad(context, new BlockPos(-6, 0, -6), new BlockPos(12, 4, 6));
 		for (int x = -4; x <= 10; x++) {
 			for (int z = -4; z <= 4; z++) {
 				context.setBlock(new BlockPos(x, 0, z), Blocks.STONE);

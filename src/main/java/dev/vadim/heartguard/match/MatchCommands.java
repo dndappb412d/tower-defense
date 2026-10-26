@@ -28,6 +28,9 @@ public final class MatchCommands {
 				.then(Commands.literal("setheart").executes(c -> setHeart(c.getSource())))
 				.then(Commands.literal("addspawn").executes(c -> addSpawn(c.getSource())))
 				.then(Commands.literal("clearspawns").executes(c -> clearSpawns(c.getSource())))
+				.then(Commands.literal("vein")
+					.then(Commands.literal("poor").executes(c -> placeVein(c.getSource(), ModBlocks.POOR_VEIN)))
+					.then(Commands.literal("rich").executes(c -> placeVein(c.getSource(), ModBlocks.RICH_VEIN))))
 				.then(Commands.literal("start").executes(c -> start(c.getSource())))
 				.then(Commands.literal("skip").executes(c -> skip(c.getSource())))
 				.then(Commands.literal("stop").executes(c -> stop(c.getSource())))
@@ -62,6 +65,12 @@ public final class MatchCommands {
 		BlockPos pos = here(source);
 		MatchData data = Match.update(source.getServer(), d -> d.withSpawn(pos));
 		return reply(source, "Spawn point added at " + pos.toShortString() + " (" + data.spawns().size() + " total)");
+	}
+
+	private static int placeVein(CommandSourceStack source, Block vein) {
+		BlockPos pos = here(source);
+		source.getServer().overworld().setBlock(pos, vein.defaultBlockState(), Block.UPDATE_ALL);
+		return reply(source, "Vein placed at " + pos.toShortString());
 	}
 
 	private static int clearSpawns(CommandSourceStack source) {
