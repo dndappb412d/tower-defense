@@ -1,0 +1,6 @@
+{
+	"model": {
+		"type": "minecraft:model",
+		"model": "heartguard:item/heart_repair_kit"
+	}
+}

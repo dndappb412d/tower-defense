@@ -1,0 +1,6 @@
+{
+	"parent": "minecraft:item/generated",
+	"textures": {
+		"layer0": "heartguard:item/heart_repair_kit"
+	}
+}

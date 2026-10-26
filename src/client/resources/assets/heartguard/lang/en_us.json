@@ -1,5 +1,7 @@
 {
 	"block.heartguard.heart": "Heart",
+	"block.heartguard.quartermaster": "Quartermaster",
+	"item.heartguard.heart_repair_kit": "Heart Repair Kit",
 	"block.heartguard.poor_vein": "Gold Vein",
 	"block.heartguard.rich_vein": "Rich Gold Vein",
 	"block.heartguard.depleted_vein": "Depleted Vein",
