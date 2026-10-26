@@ -9,6 +9,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.BlockHitResult;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Client-side commander view state: a top-down camera over a pannable, zoomable point.
@@ -33,7 +35,18 @@ public final class CommanderView {
 	/** Camera height above the player eyes, in blocks. */
 	private static double height = DEFAULT_HEIGHT;
 
+	/** Block under the cursor, refreshed every frame while the view is active. */
+	private static @Nullable BlockHitResult cursorHit;
+
 	private CommanderView() {}
+
+	public static @Nullable BlockHitResult cursorHit() {
+		return cursorHit;
+	}
+
+	public static void setCursorHit(@Nullable BlockHitResult hit) {
+		cursorHit = hit;
+	}
 
 	public static boolean isActive() {
 		return Minecraft.getInstance().screen instanceof CommanderScreen;
