@@ -15,14 +15,16 @@
 			"dev.vadim.heartguard.gametest.TowerDefGameTest",
 			"dev.vadim.heartguard.gametest.TowerCombatGameTest",
 			"dev.vadim.heartguard.gametest.TowerManagementGameTest",
-			"dev.vadim.heartguard.gametest.TowerTickGameTest"
+			"dev.vadim.heartguard.gametest.TowerTickGameTest",
+			"dev.vadim.heartguard.gametest.VeinGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
 			"dev.vadim.heartguard.gametest.HeartBlockClientTest",
 			"dev.vadim.heartguard.gametest.CoinHudClientTest",
 			"dev.vadim.heartguard.gametest.MatchEndToEndClientTest",
-			"dev.vadim.heartguard.gametest.TowerBlocksClientTest"
+			"dev.vadim.heartguard.gametest.TowerBlocksClientTest",
+			"dev.vadim.heartguard.gametest.VeinBlocksClientTest"
 		]
 	}
 }

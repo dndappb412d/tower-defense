@@ -2,6 +2,7 @@ package dev.vadim.heartguard.match;
 
 import dev.vadim.heartguard.economy.Coins;
 import dev.vadim.heartguard.economy.Rewards;
+import dev.vadim.heartguard.vein.Veins;
 import dev.vadim.heartguard.wave.WaveSet;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.wave.WaveSpawner;
@@ -23,7 +24,12 @@ public final class Match {
 	public static MatchData update(MinecraftServer server, UnaryOperator<MatchData> change) {
 		ServerLevel level = server.overworld();
 		MatchData before = level.getAttachedOrCreate(MatchData.ATTACHMENT);
-		MatchData after = level.modifyAttached(MatchData.ATTACHMENT, change);
+		level.modifyAttached(MatchData.ATTACHMENT, change);
+		// modifyAttached hands back the old value, so read the new one.
+		MatchData after = level.getAttachedOrCreate(MatchData.ATTACHMENT);
+		if (after.phase() == MatchData.Phase.PAYOUT && before.phase() != MatchData.Phase.PAYOUT) {
+			Veins.regenerate(server);
+		}
 		if (after.phase() != before.phase() || after.wave() != before.wave()) {
 			announce(server, after);
 		}

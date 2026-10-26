@@ -4,6 +4,7 @@ import dev.vadim.heartguard.Heartguard;
 import dev.vadim.heartguard.tower.TowerBlock;
 import dev.vadim.heartguard.tower.TowerBlockEntity;
 import dev.vadim.heartguard.tower.TowerDefs;
+import dev.vadim.heartguard.vein.VeinDef;
 import java.util.Map;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.core.Registry;
@@ -43,9 +44,29 @@ public final class ModBlocks {
 			.noLootTable()
 	);
 
+	/** Gold veins: mined for coins, left depleted, regrown at the next payout phase. Pick the richer one for riskier spots. */
+	public static final Block POOR_VEIN = registerPlain(
+		"poor_vein",
+		BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).strength(3.0F, 3.0F).noLootTable()
+	);
+	public static final Block RICH_VEIN = registerPlain(
+		"rich_vein",
+		BlockBehaviour.Properties.of().mapColor(MapColor.GOLD).strength(3.0F, 3.0F).lightLevel(state -> 5).noLootTable()
+	);
+	/** Mined out. Unbreakable, so the only way back is regrowth. */
+	public static final Block DEPLETED_VEIN = registerPlain(
+		"depleted_vein",
+		BlockBehaviour.Properties.of().mapColor(MapColor.STONE).strength(-1.0F, 3600000.0F).noLootTable()
+	);
+
 	public static final TowerBlock ARROW_TOWER = registerTower("arrow_tower", TowerDefs.ARROW, MapColor.COLOR_GREEN);
 	public static final TowerBlock CANNON_TOWER = registerTower("cannon_tower", TowerDefs.CANNON, MapColor.COLOR_GRAY);
 	public static final TowerBlock FROST_TOWER = registerTower("frost_tower", TowerDefs.FROST, MapColor.ICE);
+
+	private static final Map<Block, Identifier> VEIN_KINDS = Map.of(
+		POOR_VEIN, VeinDef.POOR,
+		RICH_VEIN, VeinDef.RICH
+	);
 
 	private static final Map<Identifier, TowerBlock> TOWER_BLOCKS = Map.of(
 		TowerDefs.ARROW, ARROW_TOWER,
@@ -64,6 +85,11 @@ public final class ModBlocks {
 	/** Touches the class so the static registrations run. */
 	public static void init() {}
 
+	/** Which vein kind (and so which payout) a block is, or null if it is not a vein. */
+	public static @Nullable Identifier veinDefId(Block block) {
+		return VEIN_KINDS.get(block);
+	}
+
 	/** The block that holds towers of the given type, or null for an unknown type. */
 	public static @Nullable TowerBlock towerBlock(Identifier towerId) {
 		return TOWER_BLOCKS.get(towerId);
@@ -81,6 +107,13 @@ public final class ModBlocks {
 			new BlockItem(block, new Item.Properties().setId(itemKey).useBlockDescriptionPrefix())
 		);
 		return block;
+	}
+
+	/** A block with no item: it only ever comes from a map, a command or regrowth. */
+	private static Block registerPlain(String name, BlockBehaviour.Properties properties) {
+		Identifier id = Identifier.fromNamespaceAndPath(Heartguard.MOD_ID, name);
+		ResourceKey<Block> blockKey = ResourceKey.create(Registries.BLOCK, id);
+		return Registry.register(BuiltInRegistries.BLOCK, blockKey, new Block(properties.setId(blockKey)));
 	}
 
 	/** Towers have no item: they only come into the world by being bought from commander view. */

@@ -170,6 +170,20 @@ public class MatchGameTest {
 	}
 
 	@GameTest
+	public void updateReturnsTheNewState(GameTestHelper context) {
+		MinecraftServer server = context.getLevel().getServer();
+		try {
+			MatchData returned = Match.update(server, d -> configured().started(TOTAL_WAVES));
+			expect(context, returned.phase() == Phase.BUILD && returned.equals(Match.get(server)), "update returns the state it just stored, got " + returned.phase());
+			MatchData next = Match.update(server, MatchData::advanced);
+			expect(context, next.phase() == Phase.WAVE && next.wave() == 1, "and again after the next change, got " + next.phase());
+		} finally {
+			Match.update(server, d -> MatchData.EMPTY);
+		}
+		context.succeed();
+	}
+
+	@GameTest
 	public void commandsDriveTheMatchOnTheServer(GameTestHelper context) {
 		MinecraftServer server = context.getLevel().getServer();
 		CommandSourceStack source = server.createCommandSourceStack();

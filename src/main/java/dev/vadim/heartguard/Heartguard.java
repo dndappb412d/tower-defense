@@ -12,6 +12,7 @@ import dev.vadim.heartguard.tower.TowerActionPayload;
 import dev.vadim.heartguard.tower.TowerDefs;
 import dev.vadim.heartguard.tower.TowerService;
 import dev.vadim.heartguard.tower.TowerSync;
+import dev.vadim.heartguard.vein.Veins;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.placement.PlacementService;
 import net.fabricmc.api.ModInitializer;
@@ -46,6 +47,7 @@ public class Heartguard implements ModInitializer {
 			LOGGER.debug("{} at {} for {}: {}", payload.action(), payload.pos(), context.player().getName().getString(), result);
 		});
 		TowerSync.init();
+		Veins.init();
 		ModBlocks.init();
 		WaveSets.init();
 		TowerDefs.init();

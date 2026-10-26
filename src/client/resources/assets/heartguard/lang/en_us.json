@@ -1,5 +1,8 @@
 {
 	"block.heartguard.heart": "Heart",
+	"block.heartguard.poor_vein": "Gold Vein",
+	"block.heartguard.rich_vein": "Rich Gold Vein",
+	"block.heartguard.depleted_vein": "Depleted Vein",
 	"block.heartguard.command_post": "Command Post",
 	"block.heartguard.arrow_tower": "Arrow Tower",
 	"block.heartguard.cannon_tower": "Cannon Tower",
