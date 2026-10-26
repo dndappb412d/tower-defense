@@ -1,13 +1,14 @@
 package dev.vadim.heartguard.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.blaze3d.platform.Window;
 import dev.vadim.heartguard.Heartguard;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Transparent screen drawn over the world during commander view. Its only jobs for now are to free the cursor,
@@ -18,6 +19,8 @@ public class CommanderScreen extends Screen {
 	private static final double PAN_SPEED = 0.8;
 	private static final double ZOOM_STEP = 3.0;
 
+	/** Keys currently held, from screen key events (a screen gets no KeyMapping state, and tests inject events). */
+	private final Set<Integer> held = new HashSet<>();
 	private long lastFrameNanos = System.nanoTime();
 
 	public CommanderScreen() {
@@ -44,21 +47,19 @@ public class CommanderScreen extends Screen {
 	}
 
 	private void panFromKeys(double dt) {
-		Window window = Minecraft.getInstance().getWindow();
-		double right = axis(window, InputConstants.KEY_D, InputConstants.KEY_A);
+		double right = axis(InputConstants.KEY_D, InputConstants.KEY_A);
 		// North is -Z and sits at the top of the screen (see CommanderView.YAW).
-		double down = axis(window, InputConstants.KEY_S, InputConstants.KEY_W);
+		double down = axis(InputConstants.KEY_S, InputConstants.KEY_W);
 		if (right == 0.0 && down == 0.0) {
 			return;
 		}
-		double boost = InputConstants.isKeyDown(window, InputConstants.KEY_LSHIFT) ? 2.0 : 1.0;
+		double boost = held.contains(InputConstants.KEY_LSHIFT) ? 2.0 : 1.0;
 		double step = PAN_SPEED * CommanderView.height() * boost * dt;
 		CommanderView.pan(right * step, down * step);
 	}
 
-	private static double axis(Window window, int positive, int negative) {
-		return (InputConstants.isKeyDown(window, positive) ? 1.0 : 0.0)
-			- (InputConstants.isKeyDown(window, negative) ? 1.0 : 0.0);
+	private double axis(int positive, int negative) {
+		return (held.contains(positive) ? 1.0 : 0.0) - (held.contains(negative) ? 1.0 : 0.0);
 	}
 
 	@Override
@@ -73,7 +74,14 @@ public class CommanderScreen extends Screen {
 			onClose();
 			return true;
 		}
+		held.add(event.key());
 		return super.keyPressed(event);
+	}
+
+	@Override
+	public boolean keyReleased(KeyEvent event) {
+		held.remove(event.key());
+		return super.keyReleased(event);
 	}
 
 	@Override

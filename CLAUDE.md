@@ -24,8 +24,16 @@ Mod ID `heartguard`, base package `dev.vadim.heartguard`. Source sets: `src/main
 ```bash
 ./gradlew build          # compile, run GameTests, build the jar
 ./gradlew runClient      # dev client (opens a game window)
-./gradlew runGameTest    # GameTests only (headless server)
+./gradlew runGameTest    # server GameTests only (headless)
+./gradlew runClientGameTest   # client GameTests: real client, injected input, screenshots (opens a window briefly)
 ```
+
+## Verification
+
+Verify automatically; do not ask the user to eyeball things a test can check.
+- Server logic: server GameTests in `src/gametest` (`@GameTest`).
+- Client behaviour (camera, screens, input): a `FabricClientGameTest` that drives the real client and asserts on state. Screenshots land in `build/run/clientGameTest/screenshots/` and should be looked at, but assertions carry the pass/fail.
+- Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display).
 
 ## Tooling rules
 
