@@ -18,7 +18,8 @@
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
 			"dev.vadim.heartguard.gametest.HeartBlockClientTest",
 			"dev.vadim.heartguard.gametest.CoinHudClientTest",
-			"dev.vadim.heartguard.gametest.MatchEndToEndClientTest"
+			"dev.vadim.heartguard.gametest.MatchEndToEndClientTest",
+			"dev.vadim.heartguard.gametest.TowerBlocksClientTest"
 		]
 	}
 }

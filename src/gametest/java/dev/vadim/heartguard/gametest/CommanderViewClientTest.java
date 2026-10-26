@@ -8,7 +8,8 @@ import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Camera;
-import dev.vadim.heartguard.placement.PlacementService;
+import dev.vadim.heartguard.block.ModBlocks;
+import dev.vadim.heartguard.economy.Coins;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
@@ -77,15 +78,18 @@ public class CommanderViewClientTest implements FabricClientGameTest {
 			BlockHitResult target = context.computeOnClient(mc -> CommanderView.cursorHit());
 			check(target != null, "cursor should hit a block before clicking");
 			BlockPos markerPos = target.getBlockPos().above();
+			world.getServer().runOnServer(server -> Coins.add(server.getPlayerList().getPlayers().get(0), 500));
 			boolean airBefore = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).isAir());
 			check(airBefore, "target cell should be empty before the click, was " + markerPos);
 			input.pressMouse(0);
 			boolean placed = false;
 			for (int tick = 0; tick < 40 && !placed; tick++) {
 				context.waitTick();
-				placed = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).is(PlacementService.MARKER));
+				placed = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).is(ModBlocks.ARROW_TOWER));
 			}
-			check(placed, "server should have placed the marker at " + markerPos + " after the click");
+			check(placed, "server should have placed an arrow tower at " + markerPos + " after the click");
+			int coinsLeft = world.getServer().computeOnServer(server -> Coins.balance(server.getPlayerList().getPlayers().get(0)));
+			check(coinsLeft == 500 - 50, "the arrow tower should have cost 50 coins, balance is " + coinsLeft);
 			context.waitTicks(2);
 			context.takeScreenshot("commander-marker-placed");
 
