@@ -1,6 +1,10 @@
 package dev.vadim.heartguard;
 
+import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import dev.vadim.heartguard.placement.PlacementService;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +14,11 @@ public class Heartguard implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		PayloadTypeRegistry.serverboundPlay().register(PlaceMarkerPayload.TYPE, PlaceMarkerPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(PlaceMarkerPayload.TYPE, (payload, context) -> {
+			PlacementService.Result result = PlacementService.tryPlace(context.player(), payload.pos());
+			LOGGER.debug("Place marker at {} for {}: {}", payload.pos(), context.player().getName().getString(), result);
+		});
 		LOGGER.info("Heartguard initialized (common)");
 	}
 }

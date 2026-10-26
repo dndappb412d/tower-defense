@@ -8,6 +8,8 @@ import net.fabricmc.fabric.api.client.gametest.v1.TestInput;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Camera;
+import dev.vadim.heartguard.placement.PlacementService;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
 
@@ -68,6 +70,24 @@ public class CommanderViewClientTest implements FabricClientGameTest {
 			check(moved.getBlockPos().getX() > centre.getBlockPos().getX(), "cursor right should pick further east: %s -> %s".formatted(centre.getBlockPos(), moved.getBlockPos()));
 			check(moved.getBlockPos().getZ() > centre.getBlockPos().getZ(), "cursor down should pick further south: %s -> %s".formatted(centre.getBlockPos(), moved.getBlockPos()));
 			context.takeScreenshot("commander-cursor-offset");
+
+			// End to end: a click sends the intent, the server validates it and places the marker above the picked block.
+			input.setCursorPos(width / 2.0, height2 / 2.0);
+			context.waitTicks(3);
+			BlockHitResult target = context.computeOnClient(mc -> CommanderView.cursorHit());
+			check(target != null, "cursor should hit a block before clicking");
+			BlockPos markerPos = target.getBlockPos().above();
+			boolean airBefore = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).isAir());
+			check(airBefore, "target cell should be empty before the click, was " + markerPos);
+			input.pressMouse(0);
+			boolean placed = false;
+			for (int tick = 0; tick < 40 && !placed; tick++) {
+				context.waitTick();
+				placed = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).is(PlacementService.MARKER));
+			}
+			check(placed, "server should have placed the marker at " + markerPos + " after the click");
+			context.waitTicks(2);
+			context.takeScreenshot("commander-marker-placed");
 
 			input.pressKey(InputConstants.KEY_G);
 			context.waitFor(mc -> mc.screen == null);

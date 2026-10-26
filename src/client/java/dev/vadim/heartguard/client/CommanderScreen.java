@@ -2,6 +2,11 @@ package dev.vadim.heartguard.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vadim.heartguard.Heartguard;
+import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.core.Direction;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.KeyEvent;
@@ -65,6 +70,16 @@ public class CommanderScreen extends Screen {
 	@Override
 	public boolean mouseScrolled(double x, double y, double scrollX, double scrollY) {
 		CommanderView.zoom(-scrollY * ZOOM_STEP);
+		return true;
+	}
+
+	/** Left click sends a placement intent for the cell above the picked top face; the server decides. */
+	@Override
+	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
+		BlockHitResult hit = CommanderView.cursorHit();
+		if (event.button() == 0 && hit != null && hit.getDirection() == Direction.UP) {
+			ClientPlayNetworking.send(new PlaceMarkerPayload(hit.getBlockPos().above()));
+		}
 		return true;
 	}
 
