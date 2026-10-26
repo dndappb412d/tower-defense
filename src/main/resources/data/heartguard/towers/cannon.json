@@ -1,0 +1,11 @@
+{
+	"kind": "area",
+	"cost": 100,
+	"sell_refund_percent": 70,
+	"hp": 60,
+	"tiers": [
+		{ "damage": 6.0, "range": 12.0, "fire_interval_ticks": 50, "radius": 2.5 },
+		{ "upgrade_cost": 70, "damage": 9.0, "range": 13.0, "fire_interval_ticks": 44, "radius": 3.0 },
+		{ "upgrade_cost": 120, "damage": 13.0, "range": 14.0, "fire_interval_ticks": 38, "radius": 3.5 }
+	]
+}
