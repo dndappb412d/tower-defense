@@ -62,7 +62,15 @@ public final class Veins {
 	 * a later call, and entries whose block was replaced are dropped. Returns how many veins grew back.
 	 */
 	public static int regenerate(MinecraftServer server) {
-		ServerLevel level = server.overworld();
+		int regrown = 0;
+		for (ServerLevel level : server.getAllLevels()) {
+			regrown += regenerate(level);
+		}
+		return regrown;
+	}
+
+	/** Regrows the depleted veins of one level. */
+	public static int regenerate(ServerLevel level) {
 		VeinData data = level.getAttachedOrCreate(VeinData.ATTACHMENT);
 		List<VeinData.Entry> finished = new ArrayList<>();
 		int regrown = 0;

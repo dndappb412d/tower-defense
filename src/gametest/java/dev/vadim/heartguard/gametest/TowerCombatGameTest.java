@@ -121,6 +121,26 @@ public class TowerCombatGameTest implements CustomTestMethodInvoker {
 	}
 
 	@GameTest
+	public void twoTowersHitingTheSameMobBothDealDamage(GameTestHelper context) {
+		buildFloor(context);
+		ServerLevel level = context.getLevel();
+		TowerBlockEntity first = placeTower(context, TowerDefs.ARROW, UUID.randomUUID());
+		BlockPos secondPos = context.absolutePos(new BlockPos(0, 1, 2));
+		level.setBlock(secondPos, ModBlocks.ARROW_TOWER.defaultBlockState(), Block.UPDATE_ALL);
+		TowerBlockEntity second = (TowerBlockEntity) level.getBlockEntity(secondPos);
+		second.initialize(UUID.randomUUID(), TowerDefs.get(TowerDefs.ARROW));
+		Mob target = mob(context, 4.0, true);
+		float damage = (float) TowerDefs.get(TowerDefs.ARROW).tier(1).damage();
+
+		fire(context, first, Optional.empty());
+		TowerCombat.tick(level, secondPos, second, Optional.empty());
+		expect(context, target.getHealth() == 20.0F - 2 * damage,
+			"vanilla hurt immunity must not swallow a second tower's shot: both deal " + damage + ", health " + target.getHealth());
+		target.discard();
+		context.succeed();
+	}
+
+	@GameTest
 	public void upgradedTowersHitHarder(GameTestHelper context) {
 		buildFloor(context);
 		TowerBlockEntity tower = placeTower(context, TowerDefs.ARROW, UUID.randomUUID());

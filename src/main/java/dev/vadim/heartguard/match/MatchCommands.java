@@ -1,6 +1,13 @@
 package dev.vadim.heartguard.match;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.vadim.heartguard.map.MapDef;
+import dev.vadim.heartguard.map.MapLoader;
+import java.util.List;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import dev.vadim.heartguard.wave.WaveSet;
 import dev.vadim.heartguard.wave.WaveSets;
@@ -28,6 +35,14 @@ public final class MatchCommands {
 				.then(Commands.literal("setheart").executes(c -> setHeart(c.getSource())))
 				.then(Commands.literal("addspawn").executes(c -> addSpawn(c.getSource())))
 				.then(Commands.literal("clearspawns").executes(c -> clearSpawns(c.getSource())))
+				.then(Commands.literal("play")
+					.then(Commands.argument("map", StringArgumentType.word())
+						.suggests((c, b) -> SharedSuggestionProvider.suggest(MapDef.all().keySet().stream().map(Identifier::getPath), b))
+						.executes(c -> play(c.getSource(), StringArgumentType.getString(c, "map"), "survival"))
+						.then(Commands.argument("mode", StringArgumentType.word())
+							.suggests((c, b) -> SharedSuggestionProvider.suggest(List.of("survival"), b))
+							.executes(c -> play(c.getSource(), StringArgumentType.getString(c, "map"), StringArgumentType.getString(c, "mode"))))))
+				.then(Commands.literal("leave").executes(c -> leave(c.getSource())))
 				.then(Commands.literal("shop").executes(c -> placeShop(c.getSource())))
 				.then(Commands.literal("vein")
 					.then(Commands.literal("poor").executes(c -> placeVein(c.getSource(), ModBlocks.POOR_VEIN)))
@@ -50,7 +65,7 @@ public final class MatchCommands {
 
 	private static int setHeart(CommandSourceStack source) {
 		BlockPos pos = here(source);
-		ServerLevel level = source.getServer().overworld();
+		ServerLevel level = source.getLevel();
 		// Move the marker block: clear the old Heart, if it is still there, then place the new one.
 		Match.get(source.getServer()).heart().ifPresent(old -> {
 			if (level.getBlockState(old).is(ModBlocks.HEART)) {
@@ -58,7 +73,7 @@ public final class MatchCommands {
 			}
 		});
 		level.setBlock(pos, ModBlocks.HEART.defaultBlockState(), Block.UPDATE_ALL);
-		Match.update(source.getServer(), d -> d.withHeart(pos));
+		Match.update(source.getServer(), d -> d.withHeart(pos).withDimension(level.dimension().identifier()));
 		return reply(source, "Heart set at " + pos.toShortString());
 	}
 
@@ -68,15 +83,45 @@ public final class MatchCommands {
 		return reply(source, "Spawn point added at " + pos.toShortString() + " (" + data.spawns().size() + " total)");
 	}
 
+	/** Starts a match of a map in the arena for the player who ran the command. */
+	private static int play(CommandSourceStack source, String mapName, String mode) {
+		if (!mode.equals("survival")) {
+			source.sendFailure(Component.literal("Unknown mode " + mode + " (available: survival)"));
+			return 0;
+		}
+		ServerPlayer player = source.getPlayer();
+		if (player == null) {
+			source.sendFailure(Component.literal("Only a player can play a map"));
+			return 0;
+		}
+		Identifier id = mapName.contains(":") ? Identifier.parse(mapName) : Identifier.fromNamespaceAndPath("heartguard", mapName);
+		MapLoader.PlayResult result = MapLoader.play(source.getServer(), player, id);
+		if (result != MapLoader.PlayResult.STARTED) {
+			source.sendFailure(Component.literal("Cannot play " + id + ": " + result));
+			return 0;
+		}
+		return reply(source, "Playing " + id + " (" + mode + ")");
+	}
+
+	private static int leave(CommandSourceStack source) {
+		ServerPlayer player = source.getPlayer();
+		if (player == null) {
+			source.sendFailure(Component.literal("Only a player can leave"));
+			return 0;
+		}
+		MapLoader.leave(source.getServer(), player);
+		return reply(source, "Left the arena");
+	}
+
 	private static int placeShop(CommandSourceStack source) {
 		BlockPos pos = here(source);
-		source.getServer().overworld().setBlock(pos, ModBlocks.QUARTERMASTER.defaultBlockState(), Block.UPDATE_ALL);
+		source.getLevel().setBlock(pos, ModBlocks.QUARTERMASTER.defaultBlockState(), Block.UPDATE_ALL);
 		return reply(source, "Quartermaster placed at " + pos.toShortString());
 	}
 
 	private static int placeVein(CommandSourceStack source, Block vein) {
 		BlockPos pos = here(source);
-		source.getServer().overworld().setBlock(pos, vein.defaultBlockState(), Block.UPDATE_ALL);
+		source.getLevel().setBlock(pos, vein.defaultBlockState(), Block.UPDATE_ALL);
 		return reply(source, "Vein placed at " + pos.toShortString());
 	}
 

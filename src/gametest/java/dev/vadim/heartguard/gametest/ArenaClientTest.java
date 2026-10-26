@@ -2,105 +2,142 @@ package dev.vadim.heartguard.gametest;
 
 import dev.vadim.heartguard.Heartguard;
 import dev.vadim.heartguard.block.ModBlocks;
-import dev.vadim.heartguard.economy.Rewards;
+import dev.vadim.heartguard.economy.Coins;
+import dev.vadim.heartguard.map.MapDef;
+import dev.vadim.heartguard.map.MapLoader;
+import dev.vadim.heartguard.match.Match;
+import dev.vadim.heartguard.match.MatchData;
+import dev.vadim.heartguard.match.MatchData.Phase;
+import dev.vadim.heartguard.placement.PlaceTowerPayload;
 import dev.vadim.heartguard.tower.TowerBlockEntity;
 import dev.vadim.heartguard.tower.TowerDefs;
-import dev.vadim.heartguard.wave.WaveSpawner;
-import java.util.UUID;
 import net.fabricmc.fabric.api.client.gametest.v1.FabricClientGameTest;
 import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.Mob;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
-import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
-import net.minecraft.world.level.portal.TeleportTransition;
-import net.minecraft.world.phys.Vec3;
 
 /**
- * The arena in a real new world, which is where it has to work: the datapack dimension is there, a template places into
- * it, a player can be moved in and sees it, and towers and mobs tick inside it.
+ * The arena in a real new world, played the way a player would start it: {@code /heartguard play meadow survival}
+ * builds the map, moves the player in, and starts a match; the first wave is held by two towers; {@code leave} brings
+ * the player back; and playing again resets everything. The arena dimension only exists in real worlds, so this is
+ * where the map is proven end to end.
  */
 public class ArenaClientTest implements FabricClientGameTest {
-	public static final ResourceKey<Level> ARENA = ResourceKey.create(Registries.DIMENSION, Identifier.fromNamespaceAndPath("heartguard", "arena"));
-	private static final Identifier SPIKE_TEMPLATE = Identifier.fromNamespaceAndPath("heartguard", "spike");
-	private static final BlockPos ORIGIN = new BlockPos(0, 64, 0);
+	private static final Identifier MEADOW = Identifier.fromNamespaceAndPath("heartguard", "meadow");
+
+	private TestSingleplayerContext world;
+	private ClientGameTestContext context;
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
-		try (TestSingleplayerContext world = context.worldBuilder().create()) {
+		this.context = context;
+		try (TestSingleplayerContext created = context.worldBuilder().create()) {
+			this.world = created;
 			world.getClientLevel().waitForChunksRender();
 
-			boolean exists = world.getServer().computeOnServer(server -> server.getLevel(ARENA) != null);
-			Heartguard.LOGGER.info("[arena spike] heartguard:arena exists in a new singleplayer world: {}", exists);
-			check(exists, "the heartguard:arena dimension should exist in a new world");
+			check(world.getServer().computeOnServer(server -> server.getLevel(MapLoader.ARENA) != null), "the heartguard:arena dimension should exist in a new world");
+			MapDef def = MapDef.get(MEADOW);
+			BlockPos origin = MapLoader.ARENA_ORIGIN;
 
-			// A template from the datapack places into the arena.
+			run("heartguard play meadow survival");
+			waitForClientDimension(MapLoader.ARENA);
+			world.getClientLevel().waitForChunksRender();
+			context.takeScreenshot("map-start");
+
+			// The match is on and everything the file names is there.
+			MatchData match = world.getServer().computeOnServer(Match::get);
+			check(match.phase() == Phase.BUILD && match.wave() == 0, "playing starts a match in the build phase, was " + match.phase());
+			check(match.dimension().equals(MapLoader.ARENA_ID), "the match is set to run in the arena");
+			check(match.heart().equals(java.util.Optional.of(origin.offset(def.heart()))), "the Heart is where the map says, was " + match.heart());
+			check(match.spawns().size() == def.spawns().size(), "every spawn point is registered");
+			check(coins() == def.startingCoins(), "the player starts with the map's coins, had " + coins());
 			boolean placed = world.getServer().computeOnServer(server -> {
-				ServerLevel arena = server.getLevel(ARENA);
-				for (int cx = -1; cx <= 1; cx++) {
-					for (int cz = -1; cz <= 1; cz++) {
-						arena.setChunkForced(cx, cz, true);
-					}
+				ServerLevel arena = server.getLevel(MapLoader.ARENA);
+				boolean ok = arena.getBlockState(origin.offset(def.heart())).is(ModBlocks.HEART)
+					&& arena.getBlockState(origin.offset(def.commandPost())).is(ModBlocks.COMMAND_POST)
+					&& arena.getBlockState(origin.offset(def.quartermaster())).is(ModBlocks.QUARTERMASTER);
+				for (MapDef.VeinSpot vein : def.veins()) {
+					ok &= arena.getBlockState(origin.offset(vein.pos())).is(ModBlocks.veinBlock(vein.kind()));
 				}
-				StructureTemplate template = server.getStructureManager().get(SPIKE_TEMPLATE).orElseThrow();
-				return template.placeInWorld(arena, ORIGIN, ORIGIN, new StructurePlaceSettings(), arena.getRandom(), Block.UPDATE_ALL);
+				return ok;
 			});
-			check(placed, "the template should place into the arena");
-			boolean shapeOk = world.getServer().computeOnServer(server -> {
-				ServerLevel arena = server.getLevel(ARENA);
-				return arena.getBlockState(ORIGIN).is(Blocks.STONE) && arena.getBlockState(ORIGIN.offset(3, 1, 3)).is(Blocks.GOLD_BLOCK)
-					&& arena.getBlockState(ORIGIN.offset(0, 1, 0)).isAir() && arena.getBlockState(ORIGIN.offset(20, 0, 20)).isAir();
-			});
-			check(shapeOk, "the platform has the shape in the template and nothing else is built around it");
+			check(placed, "the Heart, Command Post, Quartermaster and every vein are on the map");
 
-			// The player moves in and the client follows.
-			UUID playerId = world.getServer().computeOnServer(server -> {
-				ServerPlayer player = server.getPlayerList().getPlayers().get(0);
-				player.teleport(new TeleportTransition(server.getLevel(ARENA), Vec3.atBottomCenterOf(ORIGIN.offset(1, 1, 1)), Vec3.ZERO, 0.0F, 20.0F, TeleportTransition.DO_NOTHING));
-				return player.getUUID();
-			});
-			boolean clientThere = false;
-			for (int tick = 0; tick < 100 && !clientThere; tick++) {
-				context.waitTick();
-				clientThere = context.computeOnClient(mc -> mc.level != null && mc.level.dimension().equals(ARENA) && mc.player != null);
-			}
-			check(clientThere, "the client should switch to the arena dimension after the player is teleported");
-			world.getClientLevel().waitForChunksRender();
-			context.takeScreenshot("arena-platform");
+			// Two towers at the choke hold the first wave.
+			BlockPos first = origin.offset(47, 1, 17);
+			BlockPos second = origin.offset(47, 1, 23);
+			build(TowerDefs.ARROW, first);
+			build(TowerDefs.ARROW, second);
+			context.takeScreenshot("map-towers");
 
-			// Towers and mobs run in the arena.
-			BlockPos towerPos = ORIGIN.offset(1, 1, 3);
-			Mob target = world.getServer().computeOnServer(server -> {
-				ServerLevel arena = server.getLevel(ARENA);
-				arena.setBlock(towerPos, ModBlocks.ARROW_TOWER.defaultBlockState(), Block.UPDATE_ALL);
-				((TowerBlockEntity) arena.getBlockEntity(towerPos)).initialize(playerId, TowerDefs.get(TowerDefs.ARROW));
-				Mob husk = EntityType.HUSK.create(arena, EntitySpawnReason.EVENT);
-				husk.setPos(Vec3.atBottomCenterOf(ORIGIN.offset(5, 1, 3)));
-				husk.setNoAi(true);
-				husk.addTag(WaveSpawner.WAVE_MOB_TAG);
-				arena.addFreshEntity(husk);
-				Rewards.setKillReward(husk, 3);
-				return husk;
-			});
-			boolean dead = false;
-			for (int tick = 0; tick < 300 && !dead; tick++) {
+			world.getServer().runOnServer(server -> Match.update(server, MatchData::advanced));
+			int ticks = 0;
+			while (phase() == Phase.WAVE && ticks < 4000) {
 				context.waitTick();
-				dead = !target.isAlive();
+				ticks++;
 			}
-			context.takeScreenshot("arena-tower-fired");
-			check(dead, "a tower in the arena should kill a husk there by itself, health " + target.getHealth());
+			MatchData afterWave = world.getServer().computeOnServer(Match::get);
+			Heartguard.LOGGER.info("[arena] wave 1 on the meadow: phase {}, Heart {}/{}, {} ticks", afterWave.phase(), afterWave.heartHp(), MatchData.MAX_HEART_HP, ticks);
+			check(afterWave.phase() == Phase.PAYOUT, "two arrow towers should hold wave 1 on the meadow, phase " + afterWave.phase() + " with Heart " + afterWave.heartHp());
+			context.takeScreenshot("map-wave-cleared");
+
+			// Leaving brings the player back and stops the match.
+			run("heartguard leave");
+			waitForClientDimension(Level.OVERWORLD);
+			check(phase() == Phase.IDLE, "leaving stops the match, phase " + phase());
+
+			// Playing again resets the map: no towers, a full Heart, a fresh build phase.
+			run("heartguard play meadow survival");
+			waitForClientDimension(MapLoader.ARENA);
+			boolean towersGone = world.getServer().computeOnServer(server -> {
+				ServerLevel arena = server.getLevel(MapLoader.ARENA);
+				return arena.getBlockState(first).isAir() && arena.getBlockState(second).isAir() && !(arena.getBlockEntity(first) instanceof TowerBlockEntity);
+			});
+			check(towersGone, "playing again removes the towers from the last match");
+			MatchData again = world.getServer().computeOnServer(Match::get);
+			check(again.phase() == Phase.BUILD && again.heartHp() == MatchData.MAX_HEART_HP && again.wave() == 0, "and starts a fresh match, was " + again.phase() + " with Heart " + again.heartHp());
+			check(coins() == def.startingCoins(), "with the starting coins again, had " + coins());
+			run("heartguard leave");
+			waitForClientDimension(Level.OVERWORLD);
 		}
+	}
+
+	private void run(String command) {
+		world.getServer().runOnServer(server -> {
+			ServerPlayer player = server.getPlayerList().getPlayers().get(0);
+			server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withEntity(player), command);
+		});
+		context.waitTicks(3);
+	}
+
+	private void waitForClientDimension(net.minecraft.resources.ResourceKey<Level> dimension) {
+		boolean there = false;
+		for (int tick = 0; tick < 200 && !there; tick++) {
+			context.waitTick();
+			there = context.computeOnClient(mc -> mc.level != null && mc.level.dimension().equals(dimension) && mc.player != null);
+		}
+		check(there, "the client should end up in " + dimension.identifier());
+		context.waitTicks(5);
+	}
+
+	private void build(Identifier tower, BlockPos pos) {
+		context.runOnClient(mc -> ClientPlayNetworking.send(new PlaceTowerPayload(tower, pos)));
+		context.waitTicks(5);
+		boolean placed = world.getServer().computeOnServer(server -> server.getLevel(MapLoader.ARENA).getBlockEntity(pos) instanceof TowerBlockEntity);
+		check(placed, "the " + tower.getPath() + " tower should have been built at " + pos + ", coins " + coins());
+	}
+
+	private int coins() {
+		return world.getServer().computeOnServer(server -> Coins.balance(server.getPlayerList().getPlayers().get(0)));
+	}
+
+	private Phase phase() {
+		return world.getServer().computeOnServer(server -> Match.get(server).phase());
 	}
 
 	private static void check(boolean condition, String message) {

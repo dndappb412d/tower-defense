@@ -16,7 +16,8 @@ import net.minecraft.resources.Identifier;
  * tested without a world; {@link Match} stores it as a persistent attachment on the overworld.
  *
  * <p>{@code ticksLeft} counts down in the build and payout phases. {@code waveTick} counts up during a wave and
- * drives the spawn schedule, so a wave resumes correctly after a save and reload.
+ * drives the spawn schedule, so a wave resumes correctly after a save and reload. {@code dimension} is where the
+ * match is played (the overworld unless a map moved it to the arena); see {@link Match#level}.
  */
 public record MatchData(
 	Optional<BlockPos> heart,
@@ -26,13 +27,15 @@ public record MatchData(
 	int wave,
 	int totalWaves,
 	int ticksLeft,
-	int waveTick
+	int waveTick,
+	Identifier dimension
 ) {
 	/** Build-phase length before a wave starts on its own. Fixed until it moves into data files. */
 	public static final int BUILD_TICKS = 20 * 60;
 	/** Pause between a cleared wave and the next build phase. */
 	public static final int PAYOUT_TICKS = 20 * 5;
 	public static final int MAX_HEART_HP = 100;
+	public static final Identifier OVERWORLD = Identifier.withDefaultNamespace("overworld");
 
 	public enum Phase {
 		IDLE,
@@ -60,10 +63,11 @@ public record MatchData(
 		Codec.INT.fieldOf("wave").forGetter(MatchData::wave),
 		Codec.INT.optionalFieldOf("total_waves", 0).forGetter(MatchData::totalWaves),
 		Codec.INT.fieldOf("ticks_left").forGetter(MatchData::ticksLeft),
-		Codec.INT.optionalFieldOf("wave_tick", 0).forGetter(MatchData::waveTick)
+		Codec.INT.optionalFieldOf("wave_tick", 0).forGetter(MatchData::waveTick),
+		Identifier.CODEC.optionalFieldOf("dimension", OVERWORLD).forGetter(MatchData::dimension)
 	).apply(i, MatchData::new));
 
-	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0);
+	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, OVERWORLD);
 
 	public static final AttachmentType<MatchData> ATTACHMENT = AttachmentRegistry.<MatchData>builder()
 		.persistent(CODEC)
@@ -82,21 +86,26 @@ public record MatchData(
 	}
 
 	private MatchData with(int heartHp, Phase phase, int wave, int ticksLeft, int waveTick) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
 	}
 
 	public MatchData withHeart(BlockPos pos) {
-		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick);
+		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
 	}
 
 	public MatchData withSpawn(BlockPos pos) {
 		List<BlockPos> next = new ArrayList<>(spawns);
 		next.add(pos);
-		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick);
+		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
 	}
 
 	public MatchData withoutSpawns() {
-		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick);
+		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+	}
+
+	/** Moves where the match is played. The Heart and spawn positions are in that dimension. */
+	public MatchData withDimension(Identifier dimension) {
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
 	}
 
 	public StartCheck checkStart() {
@@ -114,12 +123,12 @@ public record MatchData(
 
 	/** A fresh match of the given length: full Heart, wave 0, first build phase. Callers check {@link #checkStart()} first. */
 	public MatchData started(int totalWaves) {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0, dimension);
 	}
 
-	/** Back to idle, keeping the Heart and spawn setup. */
+	/** Back to idle, keeping the Heart, spawn setup and dimension. */
 	public MatchData stopped() {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, dimension);
 	}
 
 	/** The Heart takes damage while a match runs; at 0 HP the match is lost. Damage outside a running match is ignored. */

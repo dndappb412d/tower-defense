@@ -119,7 +119,44 @@ def spike():
     return t
 
 
-LAYOUTS = {"spike": spike}
+def meadow():
+    """
+    The first map: a 64x8x40 meadow. Mobs enter at the west (spawn pads at x=4, z=12 and z=28), cross open grass and
+    squeeze through a five-wide gap in a wall at x=44, and reach the Heart pad at the east end (x=56, z=20). Everything
+    the match needs on top (Heart, veins, Command Post, Quartermaster) is placed from data/heartguard/maps/meadow.json,
+    not baked in here, so this file is terrain only.
+    """
+    t = Template(64, 8, 40)
+    t.fill(0, 0, 0, 63, 0, 39, "minecraft:grass_block")
+
+    # Border wall, three high, so nothing wanders off the map.
+    t.fill(0, 1, 0, 63, 3, 1, "minecraft:stone_bricks")
+    t.fill(0, 1, 38, 63, 3, 39, "minecraft:stone_bricks")
+    t.fill(0, 1, 2, 1, 3, 37, "minecraft:stone_bricks")
+    t.fill(62, 1, 2, 63, 3, 37, "minecraft:stone_bricks")
+
+    # Lanes, as dirt paths (decoration: mobs walk anywhere), converging on the Heart.
+    for z in (12, 28):
+        t.fill(2, 0, z - 1, 40, 0, z + 1, "minecraft:dirt_path")
+    t.fill(39, 0, 12, 41, 0, 28, "minecraft:dirt_path")
+    t.fill(39, 0, 19, 56, 0, 21, "minecraft:dirt_path")
+
+    # Spawn pads and the Heart pad.
+    for z in (12, 28):
+        t.fill(3, 0, z - 1, 5, 0, z + 1, "minecraft:cobblestone")
+    t.fill(53, 0, 17, 59, 0, 23, "minecraft:polished_andesite")
+
+    # The choke: a wall across the field with a five-wide gap on the middle lane.
+    t.fill(44, 1, 2, 44, 2, 17, "minecraft:stone_bricks")
+    t.fill(44, 1, 23, 44, 2, 37, "minecraft:stone_bricks")
+
+    # A few pillars in the open to break up the field.
+    for x, z in ((20, 15), (20, 24), (30, 19)):
+        t.fill(x, 1, z, x + 1, 3, z + 1, "minecraft:stone_bricks")
+    return t
+
+
+LAYOUTS = {"spike": spike, "meadow": meadow}
 
 if __name__ == "__main__":
     name, out = sys.argv[1], sys.argv[2]

@@ -1,6 +1,9 @@
 package dev.vadim.heartguard.match;
 
 import dev.vadim.heartguard.economy.Coins;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
 import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.vein.Veins;
 import dev.vadim.heartguard.wave.WaveSet;
@@ -15,6 +18,15 @@ import net.minecraft.server.level.ServerLevel;
 /** Server-side access to the single match, which lives on the overworld. */
 public final class Match {
 	private Match() {}
+
+	/**
+	 * The level the match is played in: the dimension stored in the match state, or the overworld when that dimension is
+	 * not loaded. The state itself always lives on the overworld, so it can be read without knowing where the match is.
+	 */
+	public static ServerLevel level(MinecraftServer server) {
+		ServerLevel level = server.getLevel(ResourceKey.<Level>create(Registries.DIMENSION, get(server).dimension()));
+		return level != null ? level : server.overworld();
+	}
 
 	public static MatchData get(MinecraftServer server) {
 		return server.overworld().getAttachedOrCreate(MatchData.ATTACHMENT);
@@ -53,7 +65,7 @@ public final class Match {
 		}
 		if (data.phase() == MatchData.Phase.WAVE) {
 			WaveSet set = WaveSets.active();
-			if (set != null && WaveSpawner.tick(server.overworld(), data, set)) {
+			if (set != null && WaveSpawner.tick(level(server), data, set)) {
 				int bonus = Rewards.clearBonus(set.waves().get(data.wave() - 1).clearBonus(), data.heartHp());
 				Coins.addToAll(server, bonus);
 				server.getPlayerList().broadcastSystemMessage(Component.literal("Wave bonus: +" + bonus + " coins"), false);
