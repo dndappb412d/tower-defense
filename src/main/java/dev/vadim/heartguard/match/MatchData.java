@@ -107,6 +107,25 @@ public record MatchData(
 		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0);
 	}
 
+	/** The Heart takes damage while a match runs; at 0 HP the match is lost. Damage outside a running match is ignored. */
+	public MatchData damaged(int amount) {
+		if (!running() || amount <= 0) {
+			return this;
+		}
+		int next = Math.max(0, heartHp - amount);
+		return next == 0
+			? new MatchData(heart, spawns, 0, Phase.LOST, wave, 0)
+			: new MatchData(heart, spawns, next, phase, wave, ticksLeft);
+	}
+
+	/** Heals the Heart up to its maximum while a match runs. */
+	public MatchData repaired(int amount) {
+		if (!running() || amount <= 0) {
+			return this;
+		}
+		return new MatchData(heart, spawns, Math.min(MAX_HEART_HP, heartHp + amount), phase, wave, ticksLeft);
+	}
+
 	/** Moves to the next phase: build to wave, wave to payout, payout to the next build. No effect when not running. */
 	public MatchData advanced() {
 		return switch (phase) {

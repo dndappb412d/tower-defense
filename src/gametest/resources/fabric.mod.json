@@ -11,7 +11,8 @@
 			"dev.vadim.heartguard.gametest.MatchGameTest"
 		],
 		"fabric-client-gametest": [
-			"dev.vadim.heartguard.gametest.CommanderViewClientTest"
+			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
+			"dev.vadim.heartguard.gametest.HeartBlockClientTest"
 		]
 	}
 }

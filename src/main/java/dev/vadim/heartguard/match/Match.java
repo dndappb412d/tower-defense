@@ -25,6 +25,11 @@ public final class Match {
 		return after;
 	}
 
+	/** The one entry point for hurting the Heart; mobs, traps and tests all go through here. */
+	public static MatchData damageHeart(MinecraftServer server, int amount) {
+		return update(server, d -> d.damaged(amount));
+	}
+
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (get(server).running()) {
