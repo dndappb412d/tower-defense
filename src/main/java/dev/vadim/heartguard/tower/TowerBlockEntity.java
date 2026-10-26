@@ -5,6 +5,8 @@ import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.storage.ValueInput;
@@ -26,6 +28,8 @@ public class TowerBlockEntity extends BlockEntity {
 	private int tier = 1;
 	private Targeting targeting = Targeting.FIRST;
 	private int hp;
+	/** Ticks until the next shot. Not saved: a reloaded tower may fire at once, which costs nothing. */
+	private int cooldown;
 
 	public TowerBlockEntity(BlockPos pos, BlockState state) {
 		super(ModBlocks.TOWER_ENTITY, pos, state);
@@ -60,6 +64,20 @@ public class TowerBlockEntity extends BlockEntity {
 	public void setTargeting(Targeting targeting) {
 		this.targeting = targeting;
 		setChanged();
+	}
+
+	public int cooldown() {
+		return cooldown;
+	}
+
+	public void setCooldown(int cooldown) {
+		this.cooldown = cooldown;
+	}
+
+	public static void serverTick(Level level, BlockPos pos, BlockState state, TowerBlockEntity tower) {
+		if (level instanceof ServerLevel serverLevel) {
+			TowerCombat.tick(serverLevel, pos, tower);
+		}
 	}
 
 	public int hp() {
