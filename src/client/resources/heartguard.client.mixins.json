@@ -1,0 +1,11 @@
+{
+	"required": true,
+	"package": "dev.vadim.heartguard.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CameraMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
