@@ -1,6 +1,8 @@
 package dev.vadim.heartguard;
 
 import dev.vadim.heartguard.block.ModBlocks;
+import dev.vadim.heartguard.economy.Coins;
+import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.match.MatchData;
@@ -25,6 +27,8 @@ public class Heartguard implements ModInitializer {
 			LOGGER.debug("Place marker at {} for {}: {}", payload.pos(), context.player().getName().getString(), result);
 		});
 		MatchData.init();
+		Coins.init();
+		Rewards.init();
 		ModBlocks.init();
 		WaveSets.init();
 		Match.init();

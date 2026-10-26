@@ -1,5 +1,7 @@
 package dev.vadim.heartguard.match;
 
+import dev.vadim.heartguard.economy.Coins;
+import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.wave.WaveSet;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.wave.WaveSpawner;
@@ -46,6 +48,9 @@ public final class Match {
 		if (data.phase() == MatchData.Phase.WAVE) {
 			WaveSet set = WaveSets.active();
 			if (set != null && WaveSpawner.tick(server.overworld(), data, set)) {
+				int bonus = Rewards.clearBonus(set.waves().get(data.wave() - 1).clearBonus(), data.heartHp());
+				Coins.addToAll(server, bonus);
+				server.getPlayerList().broadcastSystemMessage(Component.literal("Wave bonus: +" + bonus + " coins"), false);
 				update(server, MatchData::advanced);
 				return;
 			}

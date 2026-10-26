@@ -10,11 +10,13 @@
 			"dev.vadim.heartguard.gametest.PlacementGameTest",
 			"dev.vadim.heartguard.gametest.MatchGameTest",
 			"dev.vadim.heartguard.gametest.WaveGameTest",
-			"dev.vadim.heartguard.gametest.HeartSeekGoalGameTest"
+			"dev.vadim.heartguard.gametest.HeartSeekGoalGameTest",
+			"dev.vadim.heartguard.gametest.EconomyGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
-			"dev.vadim.heartguard.gametest.HeartBlockClientTest"
+			"dev.vadim.heartguard.gametest.HeartBlockClientTest",
+			"dev.vadim.heartguard.gametest.CoinHudClientTest"
 		]
 	}
 }

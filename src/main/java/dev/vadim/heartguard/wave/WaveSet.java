@@ -12,10 +12,12 @@ import net.minecraft.world.entity.EntityType;
 /**
  * One loadable set of waves, parsed from {@code data/<namespace>/waves/<name>.json}:
  * <pre>
- * { "waves": [ { "spawns": [ { "spawn": 0, "mob": "minecraft:husk", "count": 5,
- *                              "interval_ticks": 40, "delay_ticks": 0 } ] } ] }
+ * { "waves": [ { "clear_bonus": 50,
+ *                  "spawns": [ { "spawn": 0, "mob": "minecraft:husk", "count": 5,
+ *                                "interval_ticks": 40, "delay_ticks": 0, "reward": 5 } ] } ] }
  * </pre>
- * {@code spawn} indexes the match spawn points; {@code interval_ticks} and {@code delay_ticks} default to 20 and 0.
+ * {@code spawn} indexes the match spawn points; {@code interval_ticks}, {@code delay_ticks}, {@code reward} (coins per
+ * kill) and {@code clear_bonus} default to 20, 0, 5 and 50.
  */
 public record WaveSet(List<Wave> waves) {
 	public static final Codec<WaveSet> CODEC = RecordCodecBuilder.create(i -> i.group(
@@ -35,24 +37,40 @@ public record WaveSet(List<Wave> waves) {
 	/** One mob spawn: the {@code index}th mob of its entry, due {@code tick} ticks after the wave starts. */
 	public record Scheduled(int tick, SpawnEntry entry, int index) {}
 
-	public record SpawnEntry(int spawn, EntityType<?> mob, int count, int intervalTicks, int delayTicks) {
+	public record SpawnEntry(int spawn, EntityType<?> mob, int count, int intervalTicks, int delayTicks, int reward) {
+		/** Coins per kill when the file does not say. */
+		public static final int DEFAULT_REWARD = 5;
+
 		public static final Codec<SpawnEntry> CODEC = RecordCodecBuilder.create(i -> i.group(
 			ExtraCodecs.NON_NEGATIVE_INT.fieldOf("spawn").forGetter(SpawnEntry::spawn),
 			BuiltInRegistries.ENTITY_TYPE.byNameCodec().fieldOf("mob").forGetter(SpawnEntry::mob),
 			ExtraCodecs.POSITIVE_INT.fieldOf("count").forGetter(SpawnEntry::count),
 			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("interval_ticks", 20).forGetter(SpawnEntry::intervalTicks),
-			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("delay_ticks", 0).forGetter(SpawnEntry::delayTicks)
+			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("delay_ticks", 0).forGetter(SpawnEntry::delayTicks),
+			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("reward", DEFAULT_REWARD).forGetter(SpawnEntry::reward)
 		).apply(i, SpawnEntry::new));
+
+		public SpawnEntry(int spawn, EntityType<?> mob, int count, int intervalTicks, int delayTicks) {
+			this(spawn, mob, count, intervalTicks, delayTicks, DEFAULT_REWARD);
+		}
 
 		public int lastSpawnTick() {
 			return delayTicks + (count - 1) * intervalTicks;
 		}
 	}
 
-	public record Wave(List<SpawnEntry> spawns) {
+	public record Wave(List<SpawnEntry> spawns, int clearBonus) {
+		/** Coins for clearing the wave with an untouched Heart, when the file does not say. */
+		public static final int DEFAULT_CLEAR_BONUS = 50;
+
 		public static final Codec<Wave> CODEC = RecordCodecBuilder.create(i -> i.group(
-			SpawnEntry.CODEC.listOf().validate(WaveSet::nonEmpty).fieldOf("spawns").forGetter(Wave::spawns)
+			SpawnEntry.CODEC.listOf().validate(WaveSet::nonEmpty).fieldOf("spawns").forGetter(Wave::spawns),
+			ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("clear_bonus", DEFAULT_CLEAR_BONUS).forGetter(Wave::clearBonus)
 		).apply(i, Wave::new));
+
+		public Wave(List<SpawnEntry> spawns) {
+			this(spawns, DEFAULT_CLEAR_BONUS);
+		}
 
 		public Wave {
 			spawns = List.copyOf(spawns);

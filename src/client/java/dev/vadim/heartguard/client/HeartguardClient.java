@@ -7,6 +7,7 @@ public class HeartguardClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		CommanderView.init();
+		CoinHud.init();
 		Heartguard.LOGGER.info("Heartguard initialized (client)");
 	}
 }
