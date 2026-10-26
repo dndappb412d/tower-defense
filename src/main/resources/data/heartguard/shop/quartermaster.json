@@ -1,0 +1,70 @@
+{
+	"items": [
+		{
+			"item": "minecraft:stone_pickaxe",
+			"count": 1,
+			"price": 30,
+			"category": "tools"
+		},
+		{
+			"item": "minecraft:iron_pickaxe",
+			"count": 1,
+			"price": 90,
+			"category": "tools"
+		},
+		{
+			"item": "minecraft:diamond_pickaxe",
+			"count": 1,
+			"price": 250,
+			"category": "tools"
+		},
+		{
+			"item": "minecraft:iron_sword",
+			"count": 1,
+			"price": 60,
+			"category": "weapons"
+		},
+		{
+			"item": "minecraft:bow",
+			"count": 1,
+			"price": 45,
+			"category": "weapons"
+		},
+		{
+			"item": "minecraft:arrow",
+			"count": 16,
+			"price": 18,
+			"category": "weapons"
+		},
+		{
+			"item": "minecraft:shield",
+			"count": 1,
+			"price": 35,
+			"category": "armor"
+		},
+		{
+			"item": "minecraft:iron_chestplate",
+			"count": 1,
+			"price": 80,
+			"category": "armor"
+		},
+		{
+			"item": "minecraft:golden_apple",
+			"count": 1,
+			"price": 40,
+			"category": "consumables"
+		},
+		{
+			"item": "heartguard:heart_repair_kit",
+			"count": 1,
+			"price": 70,
+			"category": "consumables"
+		},
+		{
+			"item": "minecraft:cobblestone",
+			"count": 32,
+			"price": 20,
+			"category": "blocks"
+		}
+	]
+}

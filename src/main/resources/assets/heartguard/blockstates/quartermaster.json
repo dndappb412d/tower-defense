@@ -1,0 +1,7 @@
+{
+	"variants": {
+		"": {
+			"model": "heartguard:block/quartermaster"
+		}
+	}
+}

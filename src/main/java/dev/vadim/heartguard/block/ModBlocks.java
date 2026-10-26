@@ -44,6 +44,12 @@ public final class ModBlocks {
 			.noLootTable()
 	);
 
+	/** The shop. Using it opens the Quartermaster screen; it cannot be broken or carried off. */
+	public static final Block QUARTERMASTER = registerBlock(
+		"quartermaster",
+		BlockBehaviour.Properties.of().mapColor(MapColor.WOOD).strength(-1.0F, 3600000.0F).noLootTable()
+	);
+
 	/** Gold veins: mined for coins, left depleted, regrown at the next payout phase. Pick the richer one for riskier spots. */
 	public static final Block POOR_VEIN = registerPlain(
 		"poor_vein",
