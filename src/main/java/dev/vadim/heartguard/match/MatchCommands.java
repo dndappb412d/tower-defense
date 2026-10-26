@@ -1,0 +1,88 @@
+package dev.vadim.heartguard.match;
+
+import com.mojang.brigadier.CommandDispatcher;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+
+/** Dev and test controls for the match, standing in for the lobby and map metadata that come later. */
+public final class MatchCommands {
+	private MatchCommands() {}
+
+	public static void init() {
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> register(dispatcher));
+	}
+
+	private static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+		dispatcher.register(
+			Commands.literal("heartguard")
+				.requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+				.then(Commands.literal("setheart").executes(c -> setHeart(c.getSource())))
+				.then(Commands.literal("addspawn").executes(c -> addSpawn(c.getSource())))
+				.then(Commands.literal("clearspawns").executes(c -> clearSpawns(c.getSource())))
+				.then(Commands.literal("start").executes(c -> start(c.getSource())))
+				.then(Commands.literal("skip").executes(c -> skip(c.getSource())))
+				.then(Commands.literal("stop").executes(c -> stop(c.getSource())))
+				.then(Commands.literal("status").executes(c -> status(c.getSource())))
+		);
+	}
+
+	private static BlockPos here(CommandSourceStack source) {
+		return BlockPos.containing(source.getPosition());
+	}
+
+	private static int reply(CommandSourceStack source, String text) {
+		source.sendSuccess(() -> Component.literal(text), false);
+		return 1;
+	}
+
+	private static int setHeart(CommandSourceStack source) {
+		BlockPos pos = here(source);
+		Match.update(source.getServer(), d -> d.withHeart(pos));
+		return reply(source, "Heart set at " + pos.toShortString());
+	}
+
+	private static int addSpawn(CommandSourceStack source) {
+		BlockPos pos = here(source);
+		MatchData data = Match.update(source.getServer(), d -> d.withSpawn(pos));
+		return reply(source, "Spawn point added at " + pos.toShortString() + " (" + data.spawns().size() + " total)");
+	}
+
+	private static int clearSpawns(CommandSourceStack source) {
+		Match.update(source.getServer(), MatchData::withoutSpawns);
+		return reply(source, "Spawn points cleared");
+	}
+
+	private static int start(CommandSourceStack source) {
+		MatchData.StartCheck check = Match.get(source.getServer()).checkStart();
+		if (check != MatchData.StartCheck.OK) {
+			source.sendFailure(Component.literal("Cannot start: " + check));
+			return 0;
+		}
+		Match.update(source.getServer(), MatchData::started);
+		return 1;
+	}
+
+	private static int skip(CommandSourceStack source) {
+		if (!Match.get(source.getServer()).running()) {
+			source.sendFailure(Component.literal("No match is running"));
+			return 0;
+		}
+		Match.update(source.getServer(), MatchData::advanced);
+		return 1;
+	}
+
+	private static int stop(CommandSourceStack source) {
+		Match.update(source.getServer(), MatchData::stopped);
+		return 1;
+	}
+
+	private static int status(CommandSourceStack source) {
+		MatchData d = Match.get(source.getServer());
+		return reply(source, "phase=" + d.phase() + " wave=" + d.wave() + " heartHp=" + d.heartHp()
+			+ " ticksLeft=" + d.ticksLeft() + " heart=" + d.heart().map(BlockPos::toShortString).orElse("unset")
+			+ " spawns=" + d.spawns().size());
+	}
+}

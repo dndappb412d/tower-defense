@@ -7,7 +7,8 @@
 	"entrypoints": {
 		"fabric-gametest": [
 			"dev.vadim.heartguard.gametest.HeartguardGameTest",
-			"dev.vadim.heartguard.gametest.PlacementGameTest"
+			"dev.vadim.heartguard.gametest.PlacementGameTest",
+			"dev.vadim.heartguard.gametest.MatchGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest"
