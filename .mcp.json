@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "minecraft-dev": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@mcdxai/minecraft-dev-mcp"]
+    },
+    "minecraft-fabric": {
+      "command": "node",
+      "args": [
+        "--import",
+        "./tools/minecraft-mcp/node_modules/tsx/dist/esm/index.mjs",
+        "./tools/minecraft-mcp/packages/mcp-server-fabric/src/index.ts"
+      ],
+      "env": { "FABRIC_WS_URL": "ws://localhost:25576" }
+    }
+  }
+}

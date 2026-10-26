@@ -1,0 +1,26 @@
+{
+	"schemaVersion": 1,
+	"id": "heartguard",
+	"version": "${version}",
+	"name": "Heartguard",
+	"description": "Tower defense with an FPS mode: build from a top-down commander view, then fight, mine and repair in first person.",
+	"authors": [
+		"Vadim"
+	],
+	"license": "All-Rights-Reserved",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"dev.vadim.heartguard.Heartguard"
+		],
+		"client": [
+			"dev.vadim.heartguard.client.HeartguardClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.1",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
