@@ -28,7 +28,8 @@ public final class PlacementService {
 		OUT_OF_WORLD,
 		OBSTRUCTED,
 		NO_SUPPORT,
-		NOT_ENOUGH_COINS
+		NOT_ENOUGH_COINS,
+		COMMAND_POST_REQUIRED
 	}
 
 	private PlacementService() {}
@@ -38,6 +39,10 @@ public final class PlacementService {
 		TowerBlock block = TowerBlock.forTower(towerId);
 		if (def == null || block == null) {
 			return Result.UNKNOWN_TOWER;
+		}
+
+		if (!BuildRules.canCommandNow(player)) {
+			return Result.COMMAND_POST_REQUIRED;
 		}
 
 		ServerLevel level = player.level();

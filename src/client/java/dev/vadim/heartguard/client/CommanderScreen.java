@@ -4,6 +4,10 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.vadim.heartguard.Heartguard;
 import net.minecraft.client.Minecraft;
 import dev.vadim.heartguard.placement.PlaceTowerPayload;
+import dev.vadim.heartguard.tower.TowerActionPayload;
+import dev.vadim.heartguard.tower.TowerBlock;
+import dev.vadim.heartguard.tower.TowerBlockEntity;
+import net.minecraft.core.BlockPos;
 import dev.vadim.heartguard.tower.TowerDef;
 import dev.vadim.heartguard.tower.TowerDefs;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -59,7 +63,7 @@ public class CommanderScreen extends Screen {
 	private void drawPalette(GuiGraphicsExtractor graphics) {
 		var font = Minecraft.getInstance().font;
 		var selected = CommanderView.selectedTower();
-		TowerDef def = TowerDefs.get(selected);
+		TowerDef def = ClientTowers.get(selected);
 		String price = def == null ? "?" : String.valueOf(def.cost());
 		graphics.text(font, "Build: " + selected.getPath() + " (" + price + " coins)", 6, 20, 0xFFFFFFFF);
 		StringBuilder keys = new StringBuilder();
@@ -67,6 +71,28 @@ public class CommanderScreen extends Screen {
 			keys.append(i == 0 ? "" : "   ").append('[').append(i + 1).append("] ").append(CommanderView.TOWERS.get(i).getPath());
 		}
 		graphics.text(font, keys.toString(), 6, 32, 0xFFAAAAAA);
+		drawSelectedTower(graphics, font);
+	}
+
+	/** The right-clicked tower: its tier and mode, and what upgrading and selling would do. */
+	private void drawSelectedTower(GuiGraphicsExtractor graphics, net.minecraft.client.gui.Font font) {
+		BlockPos pos = CommanderView.selectedTowerPos();
+		var level = Minecraft.getInstance().level;
+		if (pos == null || level == null) {
+			return;
+		}
+		if (!(level.getBlockEntity(pos) instanceof TowerBlockEntity tower) || !(level.getBlockState(pos).getBlock() instanceof TowerBlock block)) {
+			CommanderView.selectTowerAt(null);
+			return;
+		}
+		TowerDef def = ClientTowers.get(block.towerId());
+		String name = block.towerId().getPath() + " tower, tier " + tower.tier() + (def == null ? "" : "/" + def.maxTier())
+			+ ", targets " + tower.targeting().name().toLowerCase(java.util.Locale.ROOT);
+		graphics.text(font, name, 6, 50, 0xFF9BE89B);
+		if (def != null) {
+			String upgrade = tower.tier() >= def.maxTier() ? "max tier" : "[U] upgrade " + def.tier(tower.tier() + 1).upgradeCost();
+			graphics.text(font, upgrade + "   [X] sell +" + def.sellValue(tower.tier()) + "   [T] change mode", 6, 62, 0xFFAAAAAA);
+		}
 	}
 
 	private void panFromKeys(double dt) {
@@ -91,12 +117,16 @@ public class CommanderScreen extends Screen {
 		return true;
 	}
 
-	/** Left click sends a placement intent for the cell above the picked top face; the server decides. */
+	/** Left click builds on the picked top face, right click selects a tower; the server decides what is allowed. */
 	@Override
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		BlockHitResult hit = CommanderView.cursorHit();
-		if (event.button() == 0 && hit != null && hit.getDirection() == Direction.UP) {
+		var level = Minecraft.getInstance().level;
+		boolean onTower = hit != null && level != null && level.getBlockState(hit.getBlockPos()).getBlock() instanceof TowerBlock;
+		if (event.button() == 0 && hit != null && hit.getDirection() == Direction.UP && !onTower) {
 			ClientPlayNetworking.send(new PlaceTowerPayload(CommanderView.selectedTower(), hit.getBlockPos().above()));
+		} else if (event.button() == 1) {
+			CommanderView.selectTowerAt(onTower ? hit.getBlockPos() : null);
 		}
 		return true;
 	}
@@ -112,6 +142,22 @@ public class CommanderScreen extends Screen {
 			CommanderView.selectTower(digit);
 			return true;
 		}
+		BlockPos selected = CommanderView.selectedTowerPos();
+		if (selected != null) {
+			TowerActionPayload.Action action = switch (event.key()) {
+				case InputConstants.KEY_U -> TowerActionPayload.Action.UPGRADE;
+				case InputConstants.KEY_X -> TowerActionPayload.Action.SELL;
+				case InputConstants.KEY_T -> TowerActionPayload.Action.CYCLE_TARGETING;
+				default -> null;
+			};
+			if (action != null) {
+				ClientPlayNetworking.send(new TowerActionPayload(selected, action));
+				if (action == TowerActionPayload.Action.SELL) {
+					CommanderView.selectTowerAt(null);
+				}
+				return true;
+			}
+		}
 		held.add(event.key());
 		return super.keyPressed(event);
 	}
@@ -124,6 +170,7 @@ public class CommanderScreen extends Screen {
 
 	@Override
 	public void removed() {
+		CommanderView.selectTowerAt(null);
 		Heartguard.LOGGER.info("Commander view off");
 	}
 }

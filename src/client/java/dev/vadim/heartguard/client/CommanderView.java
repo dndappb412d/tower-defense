@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import dev.vadim.heartguard.tower.TowerDefs;
 import java.util.List;
 import net.minecraft.client.KeyMapping;
+import net.minecraft.core.BlockPos;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.resources.Identifier;
@@ -40,11 +41,21 @@ public final class CommanderView {
 	/** Tower types the commander can build, in key order: 1, 2, 3. */
 	public static final List<Identifier> TOWERS = List.of(TowerDefs.ARROW, TowerDefs.CANNON, TowerDefs.FROST);
 	private static int selectedTower;
+	/** The placed tower the commander is looking at, for upgrade, sell and mode changes. */
+	private static @Nullable BlockPos selectedTowerPos;
 
 	/** Block under the cursor, refreshed every frame while the view is active. */
 	private static @Nullable BlockHitResult cursorHit;
 
 	private CommanderView() {}
+
+	public static @Nullable BlockPos selectedTowerPos() {
+		return selectedTowerPos;
+	}
+
+	public static void selectTowerAt(@Nullable BlockPos pos) {
+		selectedTowerPos = pos;
+	}
 
 	public static Identifier selectedTower() {
 		return TOWERS.get(selectedTower);

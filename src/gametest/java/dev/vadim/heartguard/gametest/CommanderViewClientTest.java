@@ -9,6 +9,9 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.Camera;
 import dev.vadim.heartguard.block.ModBlocks;
+import dev.vadim.heartguard.client.ClientTowers;
+import dev.vadim.heartguard.tower.TowerBlockEntity;
+import dev.vadim.heartguard.tower.TowerDefs;
 import dev.vadim.heartguard.economy.Coins;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -92,6 +95,41 @@ public class CommanderViewClientTest implements FabricClientGameTest {
 			check(coinsLeft == 500 - 50, "the arrow tower should have cost 50 coins, balance is " + coinsLeft);
 			context.waitTicks(2);
 			context.takeScreenshot("commander-marker-placed");
+
+			// The tower list the palette uses is the server's, delivered by packet.
+			for (var id : java.util.List.of(TowerDefs.ARROW, TowerDefs.CANNON, TowerDefs.FROST)) {
+				boolean sameAsServer = context.computeOnClient(mc -> ClientTowers.get(id) != null && ClientTowers.get(id).equals(TowerDefs.get(id)));
+				check(sameAsServer, "the client should hold the server's numbers for " + id);
+			}
+
+			// Right click selects the tower under the cursor; U upgrades, T changes the mode, X sells.
+			input.pressMouse(1);
+			context.waitTicks(3);
+			BlockPos selected = context.computeOnClient(mc -> CommanderView.selectedTowerPos());
+			check(markerPos.equals(selected), "right click should select the tower at " + markerPos + ", selected " + selected);
+
+			input.pressKey(InputConstants.KEY_U);
+			context.waitTicks(5);
+			int serverTier = world.getServer().computeOnServer(server -> ((TowerBlockEntity) server.overworld().getBlockEntity(markerPos)).tier());
+			int clientTier = context.computeOnClient(mc -> ((TowerBlockEntity) mc.level.getBlockEntity(markerPos)).tier());
+			check(serverTier == 2, "U should upgrade the tower on the server, tier " + serverTier);
+			check(clientTier == 2, "and the client should see the new tier, saw " + clientTier);
+			int afterUpgrade = world.getServer().computeOnServer(server -> Coins.balance(server.getPlayerList().getPlayers().get(0)));
+			check(afterUpgrade == 500 - 50 - 40, "the upgrade costs 40, balance " + afterUpgrade);
+			context.takeScreenshot("commander-tower-selected");
+
+			input.pressKey(InputConstants.KEY_T);
+			context.waitTicks(5);
+			String mode = world.getServer().computeOnServer(server -> ((TowerBlockEntity) server.overworld().getBlockEntity(markerPos)).targeting().name());
+			check(mode.equals("STRONGEST"), "T should move the tower to the next mode, mode " + mode);
+
+			input.pressKey(InputConstants.KEY_X);
+			context.waitTicks(5);
+			boolean gone = world.getServer().computeOnServer(server -> server.overworld().getBlockState(markerPos).isAir());
+			int afterSale = world.getServer().computeOnServer(server -> Coins.balance(server.getPlayerList().getPlayers().get(0)));
+			check(gone, "X should sell the tower and remove its block");
+			int refund = TowerDefs.get(TowerDefs.ARROW).sellValue(2);
+			check(afterSale == afterUpgrade + refund, "selling returns " + refund + ", balance " + afterSale);
 
 			input.pressKey(InputConstants.KEY_G);
 			context.waitFor(mc -> mc.screen == null);
