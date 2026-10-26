@@ -43,6 +43,16 @@ Why not 26.2 yet: NeoForge 26.2 still beta/unstable; 26.1.2 is the stable baseli
 }
 ```
 
+### 3. universal-modder (rehan-remade) — Claude Code plugin, knowledge and release checks
+- Repo: https://github.com/rehan-remade/universal-modder. Install: `/plugin marketplace add rehan-remade/universal-modder`, then `/plugin install universal-modder@universal-modder`.
+- **What we use:**
+  - The `mod-any-game` skill (Minecraft playbook) and its knowledge base: `um kb search "minecraft"`, `um kb search "tower defense"`.
+  - Field notes, as a source of gotchas and testing ideas. First read: `knowledge/games/minecraft/bloons-td-6-in-minecraft.md`. That mod is Forge 1.20.1, so every API in it is checked against 26.1.2 with minecraft-dev before use. A note is a source of ideas, never a reason to change our architecture (server-authoritative match, vanilla navigation + `HeartSeekGoal`, data-driven content).
+  - Its safety rules for publishing, and `um publish check` before any release build.
+- **What we skip:** the reverse-engineering, Windows automation and game-recon skills; they do not apply to a mod we write from source.
+- **Optional and paid:** fal asset generation. Never call it without asking first. Default to vanilla-based models and textures (reused vanilla renderers and models with retextures or tints).
+- **Field notes:** do not write or PR one mid-milestone; propose one at the end of the milestone.
+
 ## Testing workflow
 
 ### Stage 1 — dev loop: Gradle `runClient` (primary)
@@ -70,6 +80,7 @@ Why not 26.2 yet: NeoForge 26.2 still beta/unstable; 26.1.2 is the stable baseli
 - Primary harness: Claude Code in the project folder on the dev machine (MCP servers run locally).
 - Prereqs: JDK 25, Node 20+, IntelliJ 2025.3+ (Java 25 support), MultiMC 5 for stage-2 testing.
 
-## Open items
-- Mod ID and base package name — not chosen yet.
-- Scaffold project + `.mcp.json` + `CLAUDE.md`.
+## Decided since this document was written
+- Mod ID `heartguard`, base package `dev.vadim.heartguard`. Project scaffold, `.mcp.json` and `CLAUDE.md` are done.
+- The `minecraft-mcp` bridge is built (with hardening patches: no browser origins, per-launch token, no JDK reflection) but not wired into `runClient`; assertions live in GameTests, not in bridge sessions.
+- Current development status: [status.md](status.md).
