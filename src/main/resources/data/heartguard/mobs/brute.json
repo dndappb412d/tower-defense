@@ -1,0 +1,15 @@
+{
+	"base": "minecraft:husk",
+	"name": "Brute",
+	"health": 70,
+	"speed": 0.6,
+	"armor": 4,
+	"knockback_resistance": 0.7,
+	"scale": 1.3,
+	"heart_damage": 12,
+	"traits": ["breaks_walls"],
+	"equipment": [
+		{ "slot": "head", "item": "minecraft:iron_helmet" },
+		{ "slot": "chest", "item": "minecraft:iron_chestplate" }
+	]
+}

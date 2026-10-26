@@ -20,7 +20,8 @@
 			"dev.vadim.heartguard.gametest.ShopGameTest",
 			"dev.vadim.heartguard.gametest.BalanceGameTest",
 			"dev.vadim.heartguard.gametest.TemplateGameTest",
-			"dev.vadim.heartguard.gametest.MapGameTest"
+			"dev.vadim.heartguard.gametest.MapGameTest",
+			"dev.vadim.heartguard.gametest.MobGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
@@ -31,6 +32,7 @@
 			"dev.vadim.heartguard.gametest.VeinBlocksClientTest",
 			"dev.vadim.heartguard.gametest.ShopClientTest",
 			"dev.vadim.heartguard.gametest.FullLoopClientTest",
+			"dev.vadim.heartguard.gametest.MobsClientTest",
 			"dev.vadim.heartguard.gametest.ArenaClientTest"
 		]
 	}

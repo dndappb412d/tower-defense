@@ -1,0 +1,12 @@
+{
+	"base": "minecraft:ravager",
+	"name": "Warlord",
+	"health": 400,
+	"speed": 0.8,
+	"armor": 12,
+	"knockback_resistance": 1.0,
+	"scale": 1.2,
+	"heart_damage": 25,
+	"traits": ["boss", "breaks_walls"],
+	"ability": { "summon": "heartguard:runner", "count": 3, "interval_ticks": 200, "max_alive": 8 }
+}

@@ -45,7 +45,8 @@ public final class MapLoader {
 		TEMPLATE_MISSING,
 		WAVES_MISSING,
 		NO_ARENA,
-		MAP_OUTSIDE_TEMPLATE
+		MAP_OUTSIDE_TEMPLATE,
+		UNKNOWN_MOBS
 	}
 
 	/** Where everything ended up, in the level's own coordinates. */
@@ -125,6 +126,9 @@ public final class MapLoader {
 		}
 		if (def.firstOutside(template.getSize()) != null) {
 			return PlayResult.MAP_OUTSIDE_TEMPLATE;
+		}
+		if (!waves.unknownMobs().isEmpty()) {
+			return PlayResult.UNKNOWN_MOBS;
 		}
 
 		Match.update(server, MatchData::stopped);

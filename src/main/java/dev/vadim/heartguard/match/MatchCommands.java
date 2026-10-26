@@ -141,6 +141,10 @@ public final class MatchCommands {
 			source.sendFailure(Component.literal("Cannot start: wave set " + WaveSets.activeId() + " is not loaded"));
 			return 0;
 		}
+		if (!set.unknownMobs().isEmpty()) {
+			source.sendFailure(Component.literal("Cannot start: wave set " + WaveSets.activeId() + " names unknown mobs " + set.unknownMobs()));
+			return 0;
+		}
 		Match.update(source.getServer(), d -> d.started(set.waves().size()));
 		return 1;
 	}

@@ -2,3 +2,5 @@ accessWidener v2 official
 
 # HeartSeekGoal adds goals to spawned wave mobs. Checked against Mob.java in the 26.1.2 sources.
 accessible field net/minecraft/world/entity/Mob goalSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible field net/minecraft/world/entity/Mob targetSelector Lnet/minecraft/world/entity/ai/goal/GoalSelector;
+accessible field net/minecraft/world/entity/Mob moveControl Lnet/minecraft/world/entity/ai/control/MoveControl;

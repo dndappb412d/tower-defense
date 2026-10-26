@@ -1,15 +1,12 @@
 package dev.vadim.heartguard.wave;
 
 import dev.vadim.heartguard.Heartguard;
-import dev.vadim.heartguard.ai.HeartSeekGoal;
 import dev.vadim.heartguard.ai.MatchHeartTarget;
-import dev.vadim.heartguard.economy.Rewards;
+import dev.vadim.heartguard.mob.MobFactory;
 import dev.vadim.heartguard.match.MatchData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.Mob;
 
 /** Spawns the mobs of the current wave on schedule and decides when the wave is over. Stateless: it works from the match data. */
 public final class WaveSpawner {
@@ -57,16 +54,8 @@ public final class WaveSpawner {
 			return;
 		}
 		BlockPos at = data.spawns().get(entry.spawn());
-		Entity entity = entry.mob().spawn(level, at, EntitySpawnReason.EVENT);
-		if (entity == null) {
+		if (MobFactory.spawnWaveMob(level, entry.mob(), at, entry.reward(), new MatchHeartTarget(level.getServer())) == null) {
 			Heartguard.LOGGER.warn("Could not spawn {} at {}", entry.mob(), at);
-			return;
-		}
-		entity.addTag(WAVE_MOB_TAG);
-		Rewards.setKillReward(entity, entry.reward());
-		if (entity instanceof Mob mob) {
-			mob.setPersistenceRequired();
-			HeartSeekGoal.attach(mob, new MatchHeartTarget(level.getServer()));
 		}
 	}
 }
