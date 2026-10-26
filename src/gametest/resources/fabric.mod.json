@@ -9,7 +9,8 @@
 			"dev.vadim.heartguard.gametest.HeartguardGameTest",
 			"dev.vadim.heartguard.gametest.PlacementGameTest",
 			"dev.vadim.heartguard.gametest.MatchGameTest",
-			"dev.vadim.heartguard.gametest.WaveGameTest"
+			"dev.vadim.heartguard.gametest.WaveGameTest",
+			"dev.vadim.heartguard.gametest.HeartSeekGoalGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",

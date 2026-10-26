@@ -9,6 +9,7 @@
 	],
 	"license": "All-Rights-Reserved",
 	"environment": "*",
+	"accessWidener": "heartguard.accesswidener",
 	"entrypoints": {
 		"main": [
 			"dev.vadim.heartguard.Heartguard"
