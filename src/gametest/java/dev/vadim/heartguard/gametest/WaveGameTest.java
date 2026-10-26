@@ -53,7 +53,7 @@ public class WaveGameTest {
 			""").result().orElseThrow();
 		expect(context, set.waves().size() == 2, "two waves expected, was " + set.waves().size());
 		WaveSet.SpawnEntry first = set.waves().get(0).spawns().get(0);
-		expect(context, first.spawn() == 1 && first.mob() == EntityType.HUSK && first.count() == 5, "first entry fields: " + first);
+		expect(context, first.spawn() == 1 && first.mob().equals(net.minecraft.resources.Identifier.withDefaultNamespace("husk")) && first.count() == 5, "first entry fields: " + first);
 		expect(context, first.intervalTicks() == 40 && first.delayTicks() == 10, "first entry timing: " + first);
 		WaveSet.SpawnEntry second = set.waves().get(1).spawns().get(0);
 		expect(context, second.intervalTicks() == 20 && second.delayTicks() == 0, "timing defaults to 20 and 0: " + second);

@@ -156,7 +156,14 @@ def meadow():
     return t
 
 
-LAYOUTS = {"spike": spike, "meadow": meadow}
+def flight_arena():
+    """An empty 24x16x11 box. GameTests that use it get a roomy test area (the framework walls a test in with barriers)."""
+    t = Template(24, 16, 11)
+    t.set(0, 0, 0, "minecraft:air")
+    return t
+
+
+LAYOUTS = {"spike": spike, "meadow": meadow, "flight_arena": flight_arena}
 
 if __name__ == "__main__":
     name, out = sys.argv[1], sys.argv[2]

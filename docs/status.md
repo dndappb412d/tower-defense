@@ -34,6 +34,8 @@ All merged to `main`.
 
 ## Milestone 4 in progress
 
+- **`m4-mobs` done.** Mob types are data (`data/heartguard/mobs/*.json`) and `MobFactory` is the one place a wave mob is made. Four are shipped: runner, brute, flyer (flies over walls), warlord (boss bar, summons runners). Wave files can name them. Server tests cover the data rules, stat application, armor, a runner beating a brute to the Heart, a flyer crossing a wall that stops ground mobs, and the boss summoning within its cap. The Survival wave file does not use them yet (that is `m4-waves`).
+
 - **`m4-map` done.** `/heartguard play meadow survival` builds the 64x8x40 meadow in the arena (terrain from `tools/gen_structure.py`, everything else from `data/heartguard/maps/meadow.json`), starts a match there, and moves the player in; `/heartguard leave` returns them; playing again resets the map. A client test plays it end to end (two arrow towers hold wave 1, Heart 100/100). Match state now carries a dimension, and `Match.level` is the one place that resolves it.
 - **`m4-map` spike: GO.** In a real new world the datapack dimension `heartguard:arena` exists (flat generator with no layers, so it is void), a structure template written by `tools/gen_structure.py` loads from the datapack and places exactly, a player can be teleported in and the client follows, and a tower kills a mob there by itself. Finding: the server GameTest world has a fixed set of dimensions and does not include the arena, so arena tests are client tests.
 - universal-modder is installed (`um` 0.2.0) and its knowledge base was searched; the notes are summarised in `docs/tech-stack.md`.

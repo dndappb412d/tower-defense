@@ -1,0 +1,8 @@
+{
+	"base": "minecraft:phantom",
+	"name": "Flyer",
+	"health": 14,
+	"speed": 1.0,
+	"heart_damage": 6,
+	"traits": ["flies"]
+}

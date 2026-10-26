@@ -1,0 +1,8 @@
+{
+	"base": "minecraft:husk",
+	"name": "Runner",
+	"health": 8,
+	"speed": 1.7,
+	"scale": 0.8,
+	"heart_damage": 3
+}
