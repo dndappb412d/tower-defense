@@ -74,6 +74,9 @@ public record MatchData(
 		spawns = List.copyOf(spawns);
 	}
 
+	/** Loads the class so the attachment type is registered before any world is read; otherwise saved data is skipped. */
+	public static void init() {}
+
 	public boolean running() {
 		return phase == Phase.BUILD || phase == Phase.WAVE || phase == Phase.PAYOUT;
 	}

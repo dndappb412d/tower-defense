@@ -3,6 +3,7 @@ package dev.vadim.heartguard;
 import dev.vadim.heartguard.block.ModBlocks;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
+import dev.vadim.heartguard.match.MatchData;
 import dev.vadim.heartguard.placement.PlaceMarkerPayload;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.placement.PlacementService;
@@ -23,6 +24,7 @@ public class Heartguard implements ModInitializer {
 			PlacementService.Result result = PlacementService.tryPlace(context.player(), payload.pos());
 			LOGGER.debug("Place marker at {} for {}: {}", payload.pos(), context.player().getName().getString(), result);
 		});
+		MatchData.init();
 		ModBlocks.init();
 		WaveSets.init();
 		Match.init();
