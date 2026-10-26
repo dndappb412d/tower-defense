@@ -17,7 +17,8 @@
 			"dev.vadim.heartguard.gametest.TowerManagementGameTest",
 			"dev.vadim.heartguard.gametest.TowerTickGameTest",
 			"dev.vadim.heartguard.gametest.VeinGameTest",
-			"dev.vadim.heartguard.gametest.ShopGameTest"
+			"dev.vadim.heartguard.gametest.ShopGameTest",
+			"dev.vadim.heartguard.gametest.BalanceGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
@@ -26,7 +27,8 @@
 			"dev.vadim.heartguard.gametest.MatchEndToEndClientTest",
 			"dev.vadim.heartguard.gametest.TowerBlocksClientTest",
 			"dev.vadim.heartguard.gametest.VeinBlocksClientTest",
-			"dev.vadim.heartguard.gametest.ShopClientTest"
+			"dev.vadim.heartguard.gametest.ShopClientTest",
+			"dev.vadim.heartguard.gametest.FullLoopClientTest"
 		]
 	}
 }

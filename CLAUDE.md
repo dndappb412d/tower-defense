@@ -27,8 +27,12 @@ Everything below is server-side and covered by GameTests. Code lives under `dev.
 - `wave`: wave sets are JSON in `data/<namespace>/waves/<name>.json`, loaded on data reload, so datapacks can add or override them. `WaveSpawner` spawns on a schedule driven by `MatchData.waveTick` and ends a wave when everything spawned is dead.
 - `ai`: `HeartSeekGoal` sends wave mobs to the Heart and makes them hit it; it talks to the match through a small `Target` interface so tests can use a fake.
 - `economy`: `Coins` (player balance, synced to its owner) and `Rewards` (kill rewards, wave-clear bonus).
-- `block`: the Heart block is only a marker; Heart HP lives in `MatchData`.
-- `placement`: the commander-view placement intent and its server-side rules.
+- `block`: the Heart block is only a marker; Heart HP lives in `MatchData`. `ModBlocks` also registers the Command Post, Quartermaster, the three tower blocks and the vein blocks.
+- `placement`: building intents and their server-side rules (`PlacementService`), the Command Post rule (`BuildRules`), and the one-line refusal messages (`Feedback`).
+- `tower`: tower types are data (`TowerDef`, `data/<ns>/towers/*.json`), a placed tower is a `TowerBlock` plus `TowerBlockEntity` (owner, tier, targeting, HP), `TowerCombat` and `TowerTargeting` decide who is shot, `TowerService` upgrades, sells and changes mode, and `TowerSync` keeps every client's tower list equal to the server's.
+- `vein`: gold veins pay coins straight to the miner (`Veins`), leave a depleted block, and regrow when a wave ends. Kinds and payouts are data (`VeinDef`, `data/<ns>/veins/*.json`).
+- `shop`: the Quartermaster. Items and prices are data (`ShopDef`, `data/<ns>/shop/*.json`); `Shop` is the only place a purchase is decided. `item` holds the Heart repair kit.
+- `data`: `DataRegistry` is the one loader for datapack JSON (waves, towers, veins, shop all use it). New content types should use it too.
 
 Wave file format (all of `interval_ticks`, `delay_ticks`, `reward`, `clear_bonus` are optional):
 
@@ -37,7 +41,19 @@ Wave file format (all of `interval_ticks`, `delay_ticks`, `reward`, `clear_bonus
   { "spawn": 0, "mob": "minecraft:husk", "count": 5, "interval_ticks": 40, "delay_ticks": 0, "reward": 5 } ] } ] }
 ```
 
-Dev commands (gamemaster permission): `/heartguard setheart | addspawn | clearspawns | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
+Tower, vein and shop files are validated at load, so a bad file is rejected with a logged error instead of half-loading:
+
+```json
+{ "kind": "single_target | area | slow", "cost": 50, "sell_refund_percent": 70, "hp": 40,
+  "tiers": [ { "damage": 4.0, "range": 14.0, "fire_interval_ticks": 20, "radius": 0, "slow_percent": 0, "slow_ticks": 0 },
+             { "upgrade_cost": 40, "damage": 6.0, "range": 16.0, "fire_interval_ticks": 16 } ] }
+```
+```json
+{ "payout": 10 }
+{ "items": [ { "item": "minecraft:iron_pickaxe", "count": 1, "price": 90, "category": "tools" } ] }
+```
+
+Dev commands (gamemaster permission): `/heartguard setheart | addspawn | clearspawns | shop | vein poor|rich | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
 
 ## Commands
 
@@ -53,9 +69,19 @@ Dev commands (gamemaster permission): `/heartguard setheart | addspawn | clearsp
 Verify automatically; do not ask the user to eyeball things a test can check.
 - Server logic: server GameTests in `src/gametest` (`@GameTest`).
 - Client behaviour (camera, screens, input): a `FabricClientGameTest` that drives the real client and asserts on state. Screenshots land in `build/run/clientGameTest/screenshots/` and should be looked at, but assertions carry the pass/fail.
-- Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display).
+- Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display). The client suite takes about 6 minutes, most of it `FullLoopClientTest`, which plays the whole shipped Survival set (mine, shop, build, upgrade, three waves) and logs each wave as `[full loop]`.
+- `BalanceGameTest` holds the rules the data files must obey (a wave pays for another tower, upgrades beat new towers, selling loses money, every upgrade is stronger). It cannot say the game is fun; the `[full loop]` log is where to read how hard the waves actually are.
+
+Commander controls: G toggles the view, WASD pans, scroll zooms, 1 to 3 pick the tower, left click builds, right click selects a tower, then U upgrades, X sells and T changes the targeting mode. During a wave the server only accepts these from a player standing within 4 blocks of a Command Post.
 
 ## Gotchas learned the hard way
+
+- **`modifyAttached` returns the old value.** `Match.update` re-reads the attachment afterwards. Never compare a before and an after taken from that return value.
+- **Force-load test arenas.** A GameTest structure lands at a random offset in its chunk, so mobs and block entities outside it sometimes sit in a chunk that never ticks. Use `TestArena.forceLoad` in tests that need real ticking.
+- **Towers shoot on their own.** A tower left standing by a test shoots other tests' mobs and steals their kill rewards. Tests that build towers implement `CustomTestMethodInvoker` and call `TowerCleanup.clear` when done; a test that needs a tower to tick over many ticks lives in its own class (`TowerTickGameTest`).
+- **Vanilla AI interferes with mob tests.** Wave-mob tests remove the other goals or use `setNoAi(true)`, otherwise husks chase mock players that earlier tests left in the world.
+- **Vanilla `Inventory.add` swallows items for creative players with a full inventory.** `Shop.buy` checks for room itself and drops the rest at the buyer's feet.
+- **Mobs shove the player.** A client test that mines or builds after a wave has to walk the player back first.
 
 - **Register attachments at startup.** A Fabric attachment type is registered when its class loads. If that happens after a world is read, saved data is skipped with "unknown attachment type". Every class holding an `AttachmentType` has an `init()` that `Heartguard.onInitialize` calls.
 - **Saved data needs a data-fixer type in 26.1.2** (`null` crashes on load), so persistent state uses attachments, not `SavedData`.
