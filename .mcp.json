@@ -11,7 +11,10 @@
         "./tools/minecraft-mcp/node_modules/tsx/dist/esm/index.mjs",
         "./tools/minecraft-mcp/packages/mcp-server-fabric/src/index.ts"
       ],
-      "env": { "FABRIC_WS_URL": "ws://localhost:25576" }
+      "env": {
+        "FABRIC_WS_URL": "ws://localhost:25576",
+        "MCP_TOKEN_FILE": "./run/config/mcp-token"
+      }
     }
   }
 }
