@@ -9,6 +9,11 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import dev.vadim.heartguard.block.ModBlocks;
+import java.util.Optional;
 import net.minecraft.commands.CommandSourceStack;
 
 /** Match rules: pure state transitions, persistence encoding, and the commands that drive them. */
@@ -81,6 +86,75 @@ public class MatchGameTest {
 		var encoded = MatchData.CODEC.encodeStart(NbtOps.INSTANCE, original).result().orElseThrow();
 		MatchData decoded = MatchData.CODEC.parse(NbtOps.INSTANCE, encoded).result().orElseThrow();
 		expect(context, decoded.equals(original), "decoded state should equal the original: " + decoded + " vs " + original);
+		context.succeed();
+	}
+
+	@GameTest
+	public void heartTakesDamageDuringAMatch(GameTestHelper context) {
+		MatchData d = configured().started().damaged(30);
+		expect(context, d.heartHp() == MatchData.MAX_HEART_HP - 30 && d.phase() == Phase.BUILD, "damage lowers HP without ending the match");
+		expect(context, MatchData.EMPTY.withHeart(HEART).damaged(30).heartHp() == MatchData.MAX_HEART_HP, "no damage outside a running match");
+		expect(context, configured().started().damaged(0).heartHp() == MatchData.MAX_HEART_HP, "zero damage changes nothing");
+		context.succeed();
+	}
+
+	@GameTest
+	public void heartAtZeroHpLosesTheMatch(GameTestHelper context) {
+		MatchData d = configured().started().advanced().damaged(MatchData.MAX_HEART_HP + 50);
+		expect(context, d.heartHp() == 0, "HP never goes below zero, was " + d.heartHp());
+		expect(context, d.phase() == Phase.LOST, "0 HP loses the match, was " + d.phase());
+		expect(context, !d.running() && d.ticked() == d && d.advanced() == d, "a lost match no longer advances");
+		expect(context, d.damaged(10) == d, "a lost match takes no more damage");
+		MatchData again = d.started();
+		expect(context, again.phase() == Phase.BUILD && again.heartHp() == MatchData.MAX_HEART_HP && again.wave() == 0, "a lost match can be restarted fresh");
+		context.succeed();
+	}
+
+	@GameTest
+	public void repairHealsUpToTheMaximum(GameTestHelper context) {
+		MatchData hurt = configured().started().damaged(40);
+		expect(context, hurt.repaired(15).heartHp() == MatchData.MAX_HEART_HP - 25, "repair adds HP");
+		expect(context, hurt.repaired(1000).heartHp() == MatchData.MAX_HEART_HP, "repair stops at the maximum");
+		context.succeed();
+	}
+
+	@GameTest
+	public void damagingThroughTheServerLosesTheMatch(GameTestHelper context) {
+		MinecraftServer server = context.getLevel().getServer();
+		try {
+			Match.update(server, d -> configured().started());
+			Match.damageHeart(server, 40);
+			expect(context, Match.get(server).heartHp() == MatchData.MAX_HEART_HP - 40, "server-side damage lowers HP");
+			Match.damageHeart(server, MatchData.MAX_HEART_HP);
+			expect(context, Match.get(server).phase() == Phase.LOST, "server-side lethal damage loses the match");
+		} finally {
+			Match.update(server, d -> MatchData.EMPTY);
+		}
+		context.succeed();
+	}
+
+	@GameTest
+	public void heartBlockIsPlacedMovedAndUnbreakable(GameTestHelper context) {
+		MinecraftServer server = context.getLevel().getServer();
+		ServerLevel overworld = server.overworld();
+		BlockPos first = new BlockPos(200, 90, 200);
+		BlockPos second = new BlockPos(204, 90, 200);
+		try {
+			Match.update(server, d -> MatchData.EMPTY);
+			CommandSourceStack source = server.createCommandSourceStack();
+			server.getCommands().performPrefixedCommand(source.withPosition(first.getCenter()), "heartguard setheart");
+			expect(context, overworld.getBlockState(first).is(ModBlocks.HEART), "setheart places the Heart block");
+			expect(context, Match.get(server).heart().equals(Optional.of(first)), "the match remembers where the Heart is");
+			expect(context, overworld.getBlockState(first).getDestroySpeed(overworld, first) < 0.0F, "the Heart block is unbreakable");
+
+			server.getCommands().performPrefixedCommand(source.withPosition(second.getCenter()), "heartguard setheart");
+			expect(context, overworld.getBlockState(second).is(ModBlocks.HEART), "moving the Heart places it at the new position");
+			expect(context, overworld.getBlockState(first).isAir(), "moving the Heart removes the old block");
+		} finally {
+			overworld.setBlock(first, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+			overworld.setBlock(second, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+			Match.update(server, d -> MatchData.EMPTY);
+		}
 		context.succeed();
 	}
 

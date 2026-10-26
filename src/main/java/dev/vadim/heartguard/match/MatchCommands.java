@@ -4,8 +4,12 @@ import com.mojang.brigadier.CommandDispatcher;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import dev.vadim.heartguard.block.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 
 /** Dev and test controls for the match, standing in for the lobby and map metadata that come later. */
 public final class MatchCommands {
@@ -40,6 +44,14 @@ public final class MatchCommands {
 
 	private static int setHeart(CommandSourceStack source) {
 		BlockPos pos = here(source);
+		ServerLevel level = source.getServer().overworld();
+		// Move the marker block: clear the old Heart, if it is still there, then place the new one.
+		Match.get(source.getServer()).heart().ifPresent(old -> {
+			if (level.getBlockState(old).is(ModBlocks.HEART)) {
+				level.setBlock(old, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+			}
+		});
+		level.setBlock(pos, ModBlocks.HEART.defaultBlockState(), Block.UPDATE_ALL);
 		Match.update(source.getServer(), d -> d.withHeart(pos));
 		return reply(source, "Heart set at " + pos.toShortString());
 	}

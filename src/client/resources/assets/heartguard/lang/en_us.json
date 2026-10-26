@@ -1,4 +1,5 @@
 {
+	"block.heartguard.heart": "Heart",
 	"key.category.heartguard.main": "Heartguard",
 	"key.heartguard.toggle_commander": "Toggle Commander View"
 }
