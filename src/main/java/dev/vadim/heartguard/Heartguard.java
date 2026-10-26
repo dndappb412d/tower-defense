@@ -7,6 +7,7 @@ import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.match.MatchData;
 import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import dev.vadim.heartguard.tower.TowerDefs;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.placement.PlacementService;
 import net.fabricmc.api.ModInitializer;
@@ -31,6 +32,7 @@ public class Heartguard implements ModInitializer {
 		Rewards.init();
 		ModBlocks.init();
 		WaveSets.init();
+		TowerDefs.init();
 		Match.init();
 		MatchCommands.init();
 		LOGGER.info("Heartguard initialized (common)");

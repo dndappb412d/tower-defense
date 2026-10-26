@@ -1,0 +1,11 @@
+{
+	"kind": "single_target",
+	"cost": 50,
+	"sell_refund_percent": 70,
+	"hp": 40,
+	"tiers": [
+		{ "damage": 4.0, "range": 14.0, "fire_interval_ticks": 20 },
+		{ "upgrade_cost": 40, "damage": 6.0, "range": 16.0, "fire_interval_ticks": 16 },
+		{ "upgrade_cost": 80, "damage": 9.0, "range": 18.0, "fire_interval_ticks": 12 }
+	]
+}

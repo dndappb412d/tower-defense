@@ -1,31 +1,21 @@
 package dev.vadim.heartguard.wave;
 
 import dev.vadim.heartguard.Heartguard;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
-import net.minecraft.resources.FileToIdConverter;
+import dev.vadim.heartguard.data.DataRegistry;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.packs.PackType;
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
-import net.minecraft.util.profiling.ProfilerFiller;
 import org.jspecify.annotations.Nullable;
 
-/** All loaded wave sets, replaced on every data reload so datapacks can add or override them. */
+/** All loaded wave sets (see {@link DataRegistry}), plus which one new matches use. */
 public final class WaveSets {
 	public static final Identifier DEFAULT_ID = Identifier.fromNamespaceAndPath(Heartguard.MOD_ID, "survival");
 
-	private static volatile Map<Identifier, WaveSet> loaded = Map.of();
-	/** Sets added in code (tests); they survive reloads and shadow loaded sets of the same id. */
-	private static final Map<Identifier, WaveSet> overrides = new ConcurrentHashMap<>();
+	private static final DataRegistry<WaveSet> REGISTRY = new DataRegistry<>("waves", WaveSet.CODEC);
 	private static volatile Identifier active = DEFAULT_ID;
 
 	private WaveSets() {}
 
 	public static @Nullable WaveSet get(Identifier id) {
-		WaveSet override = overrides.get(id);
-		return override != null ? override : loaded.get(id);
+		return REGISTRY.get(id);
 	}
 
 	public static @Nullable WaveSet active() {
@@ -41,30 +31,16 @@ public final class WaveSets {
 		active = id;
 	}
 
+	/** Adds a set in code (tests); it shadows loaded sets and survives reloads. */
 	public static void override(Identifier id, WaveSet set) {
-		overrides.put(id, set);
+		REGISTRY.override(id, set);
 	}
 
 	public static void clearOverride(Identifier id) {
-		overrides.remove(id);
+		REGISTRY.clearOverride(id);
 	}
 
 	public static void init() {
-		ResourceLoader.get(PackType.SERVER_DATA).registerReloadListener(
-			Identifier.fromNamespaceAndPath(Heartguard.MOD_ID, "waves"),
-			new Loader()
-		);
-	}
-
-	private static final class Loader extends SimpleJsonResourceReloadListener<WaveSet> {
-		Loader() {
-			super(WaveSet.CODEC, FileToIdConverter.json("waves"));
-		}
-
-		@Override
-		protected void apply(Map<Identifier, WaveSet> prepared, ResourceManager manager, ProfilerFiller profiler) {
-			loaded = Map.copyOf(prepared);
-			Heartguard.LOGGER.info("Loaded {} wave set(s): {}", prepared.size(), prepared.keySet());
-		}
+		REGISTRY.register();
 	}
 }
