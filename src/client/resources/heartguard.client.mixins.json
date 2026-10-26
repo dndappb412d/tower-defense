@@ -3,7 +3,9 @@
 	"package": "dev.vadim.heartguard.client.mixin",
 	"compatibilityLevel": "JAVA_25",
 	"client": [
-		"CameraMixin"
+		"CameraMixin",
+		"GuiMixin",
+		"ItemInHandRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

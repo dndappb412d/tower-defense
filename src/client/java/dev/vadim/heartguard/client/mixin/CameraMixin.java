@@ -21,7 +21,7 @@ public abstract class CameraMixin {
 	@Shadow
 	public abstract Vec3 position();
 
-	/** After vanilla aligns the camera with its entity, lift it above the player and look straight down. */
+	/** After vanilla aligns the camera with its entity, move it over the commander focus point, looking straight down. */
 	@Inject(method = "alignWithEntity", at = @At("TAIL"))
 	private void heartguard$topDown(float partialTicks, CallbackInfo ci) {
 		if (!CommanderView.isActive()) {
@@ -29,7 +29,7 @@ public abstract class CameraMixin {
 		}
 		Vec3 eye = this.position();
 		this.setRotation(CommanderView.YAW, CommanderView.PITCH);
-		this.setPosition(eye.add(0.0, CommanderView.HEIGHT, 0.0));
+		this.setPosition(new Vec3(CommanderView.centerX(), eye.y + CommanderView.height(), CommanderView.centerZ()));
 	}
 
 	/** Report the camera as detached so the local player model renders from above. */
