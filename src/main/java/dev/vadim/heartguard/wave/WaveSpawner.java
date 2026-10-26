@@ -3,6 +3,7 @@ package dev.vadim.heartguard.wave;
 import dev.vadim.heartguard.Heartguard;
 import dev.vadim.heartguard.ai.HeartSeekGoal;
 import dev.vadim.heartguard.ai.MatchHeartTarget;
+import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.match.MatchData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -62,6 +63,7 @@ public final class WaveSpawner {
 			return;
 		}
 		entity.addTag(WAVE_MOB_TAG);
+		Rewards.setKillReward(entity, entry.reward());
 		if (entity instanceof Mob mob) {
 			mob.setPersistenceRequired();
 			HeartSeekGoal.attach(mob, new MatchHeartTarget(level.getServer()));
