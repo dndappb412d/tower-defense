@@ -17,6 +17,12 @@
 			"dev.vadim.heartguard.client.HeartguardClient"
 		]
 	},
+	"mixins": [
+		{
+			"config": "heartguard.client.mixins.json",
+			"environment": "client"
+		}
+	],
 	"depends": {
 		"fabricloader": ">=0.20.1",
 		"minecraft": "~26.1",

@@ -6,7 +6,11 @@
 	"environment": "*",
 	"entrypoints": {
 		"fabric-gametest": [
-			"dev.vadim.heartguard.gametest.HeartguardGameTest"
+			"dev.vadim.heartguard.gametest.HeartguardGameTest",
+			"dev.vadim.heartguard.gametest.PlacementGameTest"
+		],
+		"fabric-client-gametest": [
+			"dev.vadim.heartguard.gametest.CommanderViewClientTest"
 		]
 	}
 }

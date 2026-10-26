@@ -25,7 +25,7 @@ fabricApi {
 		createSourceSet = true
 		modId = "heartguard-test"
 		enableGameTests = true
-		enableClientGameTests = false
+		enableClientGameTests = true
 		eula = true // Agrees to the Minecraft EULA for the headless test server.
 	}
 }

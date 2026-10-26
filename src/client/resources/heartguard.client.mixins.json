@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"package": "dev.vadim.heartguard.client.mixin",
+	"compatibilityLevel": "JAVA_25",
+	"client": [
+		"CameraMixin",
+		"GuiMixin",
+		"ItemInHandRendererMixin",
+		"MinecraftMixin"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}

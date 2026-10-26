@@ -6,6 +6,7 @@ import net.fabricmc.api.ClientModInitializer;
 public class HeartguardClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		CommanderView.init();
 		Heartguard.LOGGER.info("Heartguard initialized (client)");
 	}
 }
