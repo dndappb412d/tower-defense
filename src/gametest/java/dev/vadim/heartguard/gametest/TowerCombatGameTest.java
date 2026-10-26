@@ -14,6 +14,8 @@ import dev.vadim.heartguard.wave.WaveSpawner;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.lang.reflect.Method;
+import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -30,7 +32,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 
 /** Tower behaviour: who they pick, what each type does to it, how often, and who gets paid for kills. */
-public class TowerCombatGameTest {
+public class TowerCombatGameTest implements CustomTestMethodInvoker {
 	private static final BlockPos TOWER = new BlockPos(0, 1, 0);
 
 	private static void expect(GameTestHelper context, boolean condition, String message) {
@@ -280,19 +282,13 @@ public class TowerCombatGameTest {
 		context.succeed();
 	}
 
-	// --- the real ticker ---
-
-	@GameTest(maxTicks = 400)
-	public void aPlacedTowerShootsOnItsOwn(GameTestHelper context) {
-		buildFloor(context);
-		ServerPlayer owner = context.makeMockServerPlayerInLevel();
-		placeTower(context, TowerDefs.ARROW, owner.getUUID());
-		Mob target = mob(context, 4.0, true);
-		Rewards.setKillReward(target, 9);
-
-		context.succeedWhen(() -> {
-			expect(context, !target.isAlive(), "the tower should kill the husk by itself, health " + target.getHealth());
-			expect(context, Coins.balance(owner) == 9, "and pay its owner, had " + Coins.balance(owner));
-		});
+	/** Remove any towers the test built before the next tick, so they cannot shoot other tests' mobs. */
+	@Override
+	public void invokeTestMethod(GameTestHelper context, Method method) throws ReflectiveOperationException {
+		try {
+			method.invoke(this, context);
+		} finally {
+			TowerCleanup.clear(context);
+		}
 	}
 }

@@ -33,6 +33,16 @@ public final class ModBlocks {
 			.noLootTable()
 	);
 
+	/** During a wave the commander view only works while the player stands next to one of these. */
+	public static final Block COMMAND_POST = registerBlock(
+		"command_post",
+		BlockBehaviour.Properties.of()
+			.mapColor(MapColor.COLOR_BLUE)
+			.strength(-1.0F, 3600000.0F)
+			.lightLevel(state -> 8)
+			.noLootTable()
+	);
+
 	public static final TowerBlock ARROW_TOWER = registerTower("arrow_tower", TowerDefs.ARROW, MapColor.COLOR_GREEN);
 	public static final TowerBlock CANNON_TOWER = registerTower("cannon_tower", TowerDefs.CANNON, MapColor.COLOR_GRAY);
 	public static final TowerBlock FROST_TOWER = registerTower("frost_tower", TowerDefs.FROST, MapColor.ICE);

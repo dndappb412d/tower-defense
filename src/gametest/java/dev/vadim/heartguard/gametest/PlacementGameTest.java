@@ -7,6 +7,8 @@ import dev.vadim.heartguard.placement.PlacementService.Result;
 import dev.vadim.heartguard.tower.TowerBlockEntity;
 import dev.vadim.heartguard.tower.TowerDef;
 import dev.vadim.heartguard.tower.TowerDefs;
+import java.lang.reflect.Method;
+import net.fabricmc.fabric.api.gametest.v1.CustomTestMethodInvoker;
 import net.fabricmc.fabric.api.gametest.v1.GameTest;
 import net.minecraft.core.BlockPos;
 import net.minecraft.gametest.framework.GameTestHelper;
@@ -15,7 +17,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
 
 /** Server-side placement rules: the client only asks, these tests pin down what the server answers and charges. */
-public class PlacementGameTest {
+public class PlacementGameTest implements CustomTestMethodInvoker {
 	private static final BlockPos GROUND = new BlockPos(0, 0, 0);
 	private static final BlockPos TARGET = new BlockPos(0, 1, 0);
 	private static final Identifier ARROW = TowerDefs.ARROW;
@@ -153,5 +155,15 @@ public class PlacementGameTest {
 		expect(context, restored.tier() == 2 && restored.hp() == 17, "tier and HP are saved, got tier " + restored.tier() + " hp " + restored.hp());
 		expect(context, restored.targeting() == TowerBlockEntity.Targeting.STRONGEST, "the targeting mode is saved");
 		context.succeed();
+	}
+
+	/** Remove any towers the test built before the next tick, so they cannot shoot other tests' mobs. */
+	@Override
+	public void invokeTestMethod(GameTestHelper context, Method method) throws ReflectiveOperationException {
+		try {
+			method.invoke(this, context);
+		} finally {
+			TowerCleanup.clear(context);
+		}
 	}
 }

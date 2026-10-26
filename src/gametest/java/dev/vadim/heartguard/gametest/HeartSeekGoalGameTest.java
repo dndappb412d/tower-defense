@@ -68,6 +68,8 @@ public class HeartSeekGoalGameTest {
 		Mob husk = (Mob) EntityType.HUSK.spawn(context.getLevel(), context.absolutePos(relative), EntitySpawnReason.EVENT);
 		husk.setPersistenceRequired();
 		HeartSeekGoal.attach(husk, target);
+		// Vanilla AI would chase any player nearby, including mock players other tests leave in the world.
+		husk.goalSelector.removeAllGoals(goal -> !(goal instanceof HeartSeekGoal));
 		return husk;
 	}
 

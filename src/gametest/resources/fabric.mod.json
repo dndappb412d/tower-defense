@@ -13,7 +13,9 @@
 			"dev.vadim.heartguard.gametest.HeartSeekGoalGameTest",
 			"dev.vadim.heartguard.gametest.EconomyGameTest",
 			"dev.vadim.heartguard.gametest.TowerDefGameTest",
-			"dev.vadim.heartguard.gametest.TowerCombatGameTest"
+			"dev.vadim.heartguard.gametest.TowerCombatGameTest",
+			"dev.vadim.heartguard.gametest.TowerManagementGameTest",
+			"dev.vadim.heartguard.gametest.TowerTickGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",

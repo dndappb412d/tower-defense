@@ -4,7 +4,13 @@ import dev.vadim.heartguard.block.ModBlocks;
 import java.util.Optional;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientGamePacketListener;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -41,7 +47,7 @@ public class TowerBlockEntity extends BlockEntity {
 		this.tier = 1;
 		this.targeting = Targeting.FIRST;
 		this.hp = def.hp();
-		setChanged();
+		sync();
 	}
 
 	public Optional<UUID> owner() {
@@ -54,7 +60,7 @@ public class TowerBlockEntity extends BlockEntity {
 
 	public void setTier(int tier) {
 		this.tier = tier;
-		setChanged();
+		sync();
 	}
 
 	public Targeting targeting() {
@@ -63,7 +69,25 @@ public class TowerBlockEntity extends BlockEntity {
 
 	public void setTargeting(Targeting targeting) {
 		this.targeting = targeting;
+		sync();
+	}
+
+	/** Saves the change and tells nearby clients, so the commander screen can show the real tier and mode. */
+	private void sync() {
 		setChanged();
+		if (level != null && !level.isClientSide()) {
+			level.sendBlockUpdated(worldPosition, getBlockState(), getBlockState(), Block.UPDATE_CLIENTS);
+		}
+	}
+
+	@Override
+	public Packet<ClientGamePacketListener> getUpdatePacket() {
+		return ClientboundBlockEntityDataPacket.create(this);
+	}
+
+	@Override
+	public CompoundTag getUpdateTag(HolderLookup.Provider registries) {
+		return saveCustomOnly(registries);
 	}
 
 	public int cooldown() {
@@ -86,7 +110,7 @@ public class TowerBlockEntity extends BlockEntity {
 
 	public void setHp(int hp) {
 		this.hp = hp;
-		setChanged();
+		sync();
 	}
 
 	/** The definition this tower reads its numbers from, or null if its type is no longer loaded. */
