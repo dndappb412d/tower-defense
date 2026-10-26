@@ -12,6 +12,8 @@ base {
 loom {
 	splitEnvironmentSourceSets()
 
+	accessWidenerPath = file("src/main/resources/heartguard.accesswidener")
+
 	mods {
 		"heartguard" {
 			sourceSet sourceSets.main

@@ -14,7 +14,7 @@
 		{
 			"spawns": [
 				{ "spawn": 0, "mob": "minecraft:husk", "count": 12, "interval_ticks": 20 },
-				{ "spawn": 0, "mob": "minecraft:skeleton", "count": 4, "interval_ticks": 50, "delay_ticks": 60 }
+				{ "spawn": 0, "mob": "minecraft:vindicator", "count": 4, "interval_ticks": 50, "delay_ticks": 60 }
 			]
 		}
 	]
