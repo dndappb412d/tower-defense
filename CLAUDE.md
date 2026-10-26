@@ -19,6 +19,26 @@ Mod ID `heartguard`, base package `dev.vadim.heartguard`. Source sets: `src/main
 - **Data-driven content.** Waves, tower stats, shop prices and map metadata live in JSON / datapacks, not Java constants.
 - Client-only code (screens, camera, rendering) goes in `src/client`; it must not be referenced from `src/main`.
 
+## Game systems (milestone 2)
+
+Everything below is server-side and covered by GameTests. Code lives under `dev.vadim.heartguard`.
+
+- `match`: `MatchData` is the whole match as an immutable record with pure transition functions (phases `IDLE`, `BUILD`, `WAVE`, `PAYOUT`, `WON`, `LOST`). `Match` stores it as a persistent attachment on the overworld and ticks it. `Match.damageHeart` is the one way to hurt the Heart.
+- `wave`: wave sets are JSON in `data/<namespace>/waves/<name>.json`, loaded on data reload, so datapacks can add or override them. `WaveSpawner` spawns on a schedule driven by `MatchData.waveTick` and ends a wave when everything spawned is dead.
+- `ai`: `HeartSeekGoal` sends wave mobs to the Heart and makes them hit it; it talks to the match through a small `Target` interface so tests can use a fake.
+- `economy`: `Coins` (player balance, synced to its owner) and `Rewards` (kill rewards, wave-clear bonus).
+- `block`: the Heart block is only a marker; Heart HP lives in `MatchData`.
+- `placement`: the commander-view placement intent and its server-side rules.
+
+Wave file format (all of `interval_ticks`, `delay_ticks`, `reward`, `clear_bonus` are optional):
+
+```json
+{ "waves": [ { "clear_bonus": 50, "spawns": [
+  { "spawn": 0, "mob": "minecraft:husk", "count": 5, "interval_ticks": 40, "delay_ticks": 0, "reward": 5 } ] } ] }
+```
+
+Dev commands (gamemaster permission): `/heartguard setheart | addspawn | clearspawns | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
+
 ## Commands
 
 ```bash
@@ -34,6 +54,16 @@ Verify automatically; do not ask the user to eyeball things a test can check.
 - Server logic: server GameTests in `src/gametest` (`@GameTest`).
 - Client behaviour (camera, screens, input): a `FabricClientGameTest` that drives the real client and asserts on state. Screenshots land in `build/run/clientGameTest/screenshots/` and should be looked at, but assertions carry the pass/fail.
 - Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display).
+
+## Gotchas learned the hard way
+
+- **Register attachments at startup.** A Fabric attachment type is registered when its class loads. If that happens after a world is read, saved data is skipped with "unknown attachment type". Every class holding an `AttachmentType` has an `init()` that `Heartguard.onInitialize` calls.
+- **Saved data needs a data-fixer type in 26.1.2** (`null` crashes on load), so persistent state uses attachments, not `SavedData`.
+- **Access wideners use the `official` namespace** (`accessWidener v2 official`); this MC version is unobfuscated.
+- **GameTests share one server, so one global match.** Server tests that touch `Match` must finish within one tick and restore `MatchData.EMPTY` in a `finally`. Anything that needs real time (walking mobs, a whole match) is a client GameTest in its own world, or uses a fake `HeartSeekGoal.Target`.
+- **Keep GameTest arenas small.** A mob path ends where loaded chunks end; a 29-block floor fell outside the chunks a test keeps loaded.
+- **Do not run GameTests that need a window in CI.** CI runs `./gradlew build` only.
+- **Commits have no `Co-Authored-By` trailer.**
 
 ## Tooling rules
 
