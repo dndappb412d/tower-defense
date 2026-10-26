@@ -91,6 +91,16 @@ public final class ModBlocks {
 	/** Touches the class so the static registrations run. */
 	public static void init() {}
 
+	/** The block a vein kind is placed as, or null for an unknown kind. */
+	public static @Nullable Block veinBlock(Identifier kind) {
+		for (Map.Entry<Block, Identifier> entry : VEIN_KINDS.entrySet()) {
+			if (entry.getValue().equals(kind)) {
+				return entry.getKey();
+			}
+		}
+		return null;
+	}
+
 	/** Which vein kind (and so which payout) a block is, or null if it is not a vein. */
 	public static @Nullable Identifier veinDefId(Block block) {
 		return VEIN_KINDS.get(block);

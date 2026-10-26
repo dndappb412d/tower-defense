@@ -52,6 +52,8 @@ Why not 26.2 yet: NeoForge 26.2 still beta/unstable; 26.1.2 is the stable baseli
 - **What we skip:** the reverse-engineering, Windows automation and game-recon skills; they do not apply to a mod we write from source.
 - **Optional and paid:** fal asset generation. Never call it without asking first. Default to vanilla-based models and textures (reused vanilla renderers and models with retextures or tints).
 - **Field notes:** do not write or PR one mid-milestone; propose one at the end of the milestone.
+- **Installed:** `uv tool install git+https://github.com/rehan-remade/universal-modder` (v0.2.0, pure Python: hatchling build, pillow, numpy, pyyaml; no hooks or post-install steps). The executable is `C:\Users\MIXPC\.local\bin\um.exe`, which is not on PATH; call it by full path or run `uv tool update-shell`.
+- **Notes worth rereading:** `games/minecraft/bloons-td-6-in-minecraft.md` (tower defense), `games/left-4-dead/left-4-dead-infected-and-tank-in-minecraft.md` (custom mobs and a boss), `games/fpv-logic/...` (Fabric on 26.x).
 
 ## Testing workflow
 

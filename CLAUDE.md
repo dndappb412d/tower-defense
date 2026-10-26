@@ -32,6 +32,7 @@ Everything below is server-side and covered by GameTests. Code lives under `dev.
 - `tower`: tower types are data (`TowerDef`, `data/<ns>/towers/*.json`), a placed tower is a `TowerBlock` plus `TowerBlockEntity` (owner, tier, targeting, HP), `TowerCombat` and `TowerTargeting` decide who is shot, `TowerService` upgrades, sells and changes mode, and `TowerSync` keeps every client's tower list equal to the server's.
 - `vein`: gold veins pay coins straight to the miner (`Veins`), leave a depleted block, and regrow when a wave ends. Kinds and payouts are data (`VeinDef`, `data/<ns>/veins/*.json`).
 - `shop`: the Quartermaster. Items and prices are data (`ShopDef`, `data/<ns>/shop/*.json`); `Shop` is the only place a purchase is decided. `item` holds the Heart repair kit.
+- `map`: a playable map is a structure template plus a data file (`MapDef`, `data/<ns>/maps/*.json`) with every position relative to the template origin. `MapLoader.play` builds it into the arena dimension, points the match at it, resets the player's coins, and teleports them in; `MapLoader.build` always clears the area first, so playing again is a reset. `ReturnPoint` remembers where the player came from for `leave`. `Match.level(server)` is the level the match runs in (the stored dimension, falling back to the overworld).
 - `data`: `DataRegistry` is the one loader for datapack JSON (waves, towers, veins, shop all use it). New content types should use it too.
 
 Wave file format (all of `interval_ticks`, `delay_ticks`, `reward`, `clear_bonus` are optional):
@@ -53,7 +54,16 @@ Tower, vein and shop files are validated at load, so a bad file is rejected with
 { "items": [ { "item": "minecraft:iron_pickaxe", "count": 1, "price": 90, "category": "tools" } ] }
 ```
 
-Dev commands (gamemaster permission): `/heartguard setheart | addspawn | clearspawns | shop | vein poor|rich | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
+Map file (all positions relative to the template origin; `starting_coins` and `veins` are optional):
+
+```json
+{ "template": "heartguard:meadow", "waves": "heartguard:survival", "starting_coins": 120,
+  "player_start": [51, 1, 20], "heart": [56, 1, 20], "spawns": [[4, 1, 12], [4, 1, 28]],
+  "veins": [ { "pos": [30, 1, 3], "kind": "heartguard:rich" } ],
+  "command_post": [50, 1, 23], "quartermaster": [50, 1, 17] }
+```
+
+Real play (gamemaster permission): `/heartguard play <map> [survival]` builds the map in the arena and starts a match, `/heartguard leave` stops it and returns you. Dev commands, kept for tests: `/heartguard setheart | addspawn | clearspawns | shop | vein poor|rich | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
 
 ## Commands
 
@@ -81,6 +91,13 @@ Commander controls: G toggles the view, WASD pans, scroll zooms, 1 to 3 pick the
 - **Towers shoot on their own.** A tower left standing by a test shoots other tests' mobs and steals their kill rewards. Tests that build towers implement `CustomTestMethodInvoker` and call `TowerCleanup.clear` when done; a test that needs a tower to tick over many ticks lives in its own class (`TowerTickGameTest`).
 - **Vanilla AI interferes with mob tests.** Wave-mob tests remove the other goals or use `setNoAi(true)`, otherwise husks chase mock players that earlier tests left in the world.
 - **Vanilla `Inventory.add` swallows items for creative players with a full inventory.** `Shop.buy` checks for room itself and drops the rest at the buyer's feet.
+- **The GameTest world has a fixed set of dimensions.** The datapack dimension `heartguard:arena` exists in a real new world (client tests, singleplayer) but not in the server GameTest world, so server GameTests run in the overworld and anything that needs the arena is a client test. Code that needs "the match level" goes through one seam so both work.
+- **`Path.canReach()` is false for a good path to a solid block.** The Heart is a block, so a vanilla path to it ends beside it. Check that the path's end node is within `HeartSeekGoal.REACH`, not `canReach()`. The same goes for any "is the Heart blocked" test.
+- **Wait for chunks in tests that build into the GameTest world.** `setChunkForced` only registers a ticket; entities and navigation need the chunk entity-ticking (`level.isPositionEntityTicking`). Use `succeedWhen` and a run-once flag. The overworld there is real generated terrain, so loading can take a while.
+- **The arena is always day:** its dimension type has `has_fixed_time`, no `default_clock` and an empty `timelines` list.
+- **Structure templates come from `tools/gen_structure.py`.** It writes the `.nbt` (gzipped NBT, `DataVersion` 4790 for 26.1.2) from a plain layout, so a map is reviewable as text and rebuilds byte for byte: `python tools/gen_structure.py <layout> src/main/resources/data/heartguard/structure/<name>.nbt`. Bump `DATA_VERSION` when the game version changes.
+- **`ENTITY_LOAD` fires inside `addFreshEntity`.** Add tags and attachments after spawning, never from a load handler (from the universal-modder field notes).
+- **Vanilla hurt immunity swallows a second hit.** After a mob is hurt it ignores weaker damage for about 10 ticks, so two towers on one mob dealt the damage of one. `TowerCombat.hit` clears `invulnerableTime` before every tower hit; anything else that deals scripted damage should do the same.
 - **Mobs shove the player.** A client test that mines or builds after a wave has to walk the player back first.
 
 - **Register attachments at startup.** A Fabric attachment type is registered when its class loads. If that happens after a world is read, saved data is skipped with "unknown attachment type". Every class holding an `AttachmentType` has an `init()` that `Heartguard.onInitialize` calls.

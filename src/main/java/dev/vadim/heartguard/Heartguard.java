@@ -4,6 +4,8 @@ import dev.vadim.heartguard.block.ModBlocks;
 import dev.vadim.heartguard.economy.Coins;
 import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.item.ModItems;
+import dev.vadim.heartguard.map.MapDef;
+import dev.vadim.heartguard.map.ReturnPoint;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.match.MatchData;
@@ -51,6 +53,8 @@ public class Heartguard implements ModInitializer {
 		TowerSync.init();
 		ModItems.init();
 		Shop.init();
+		MapDef.register();
+		ReturnPoint.init();
 		Veins.init();
 		ModBlocks.init();
 		WaveSets.init();

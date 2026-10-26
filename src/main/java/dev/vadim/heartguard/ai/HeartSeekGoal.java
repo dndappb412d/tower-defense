@@ -27,7 +27,7 @@ public class HeartSeekGoal extends Goal {
 	private static final int PRIORITY = 1;
 	private static final double SPEED = 1.0;
 	/** How close, in blocks from the Heart centre, a mob has to be to hit it. */
-	private static final double REACH = 2.5;
+	public static final double REACH = 2.5;
 	private static final int ATTACK_INTERVAL = 20;
 	private static final int REPATH_INTERVAL = 10;
 	/** Damage per hit. One value for every mob until mob stats move into data files. */

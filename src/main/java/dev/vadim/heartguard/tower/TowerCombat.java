@@ -88,7 +88,7 @@ public final class TowerCombat {
 	private static void shoot(ServerLevel level, Vec3 from, LivingEntity target, TowerDef.Tier tier, DamageSource source) {
 		trail(level, from, target.position().add(0.0, target.getBbHeight() / 2.0, 0.0));
 		level.playSound(null, BlockPos.containing(from), SoundEvents.ARROW_SHOOT, SoundSource.BLOCKS, 0.8F, 1.2F);
-		target.hurtServer(level, source, (float) tier.damage());
+		hit(level, target, source, tier.damage());
 	}
 
 	private static void explode(ServerLevel level, Vec3 from, LivingEntity target, TowerDef.Tier tier, DamageSource source) {
@@ -98,8 +98,17 @@ public final class TowerCombat {
 		level.playSound(null, BlockPos.containing(centre), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.BLOCKS, 0.6F, 1.4F);
 		// A plain list, because hurting a mob can kill it and change what the world returns next.
 		for (LivingEntity mob : List.copyOf(waveMobsNear(level, centre, tier.radius()))) {
-			mob.hurtServer(level, source, (float) tier.damage());
+			hit(level, mob, source, tier.damage());
 		}
+	}
+
+	/**
+	 * Tower damage ignores vanilla's hurt immunity. Otherwise a mob another tower hit a few ticks ago shrugs this hit off,
+	 * and two towers on one target would deal the damage of one.
+	 */
+	private static void hit(ServerLevel level, LivingEntity mob, DamageSource source, double damage) {
+		mob.invulnerableTime = 0;
+		mob.hurtServer(level, source, (float) damage);
 	}
 
 	private static void chill(ServerLevel level, Vec3 from, LivingEntity target, TowerDef.Tier tier) {
