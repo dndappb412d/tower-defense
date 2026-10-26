@@ -4,6 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import dev.vadim.heartguard.Heartguard;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import dev.vadim.heartguard.tower.TowerDefs;
+import java.util.List;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.input.KeyEvent;
@@ -35,10 +37,24 @@ public final class CommanderView {
 	/** Camera height above the player eyes, in blocks. */
 	private static double height = DEFAULT_HEIGHT;
 
+	/** Tower types the commander can build, in key order: 1, 2, 3. */
+	public static final List<Identifier> TOWERS = List.of(TowerDefs.ARROW, TowerDefs.CANNON, TowerDefs.FROST);
+	private static int selectedTower;
+
 	/** Block under the cursor, refreshed every frame while the view is active. */
 	private static @Nullable BlockHitResult cursorHit;
 
 	private CommanderView() {}
+
+	public static Identifier selectedTower() {
+		return TOWERS.get(selectedTower);
+	}
+
+	public static void selectTower(int index) {
+		if (index >= 0 && index < TOWERS.size()) {
+			selectedTower = index;
+		}
+	}
 
 	public static @Nullable BlockHitResult cursorHit() {
 		return cursorHit;

@@ -2,7 +2,10 @@ package dev.vadim.heartguard.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import dev.vadim.heartguard.Heartguard;
-import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import net.minecraft.client.Minecraft;
+import dev.vadim.heartguard.placement.PlaceTowerPayload;
+import dev.vadim.heartguard.tower.TowerDef;
+import dev.vadim.heartguard.tower.TowerDefs;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.BlockHitResult;
@@ -49,6 +52,21 @@ public class CommanderScreen extends Screen {
 		lastFrameNanos = now;
 		panFromKeys(dt);
 		super.extractRenderState(graphics, mouseX, mouseY, a);
+		drawPalette(graphics);
+	}
+
+	/** One line under the coin counter: the selected tower and its price, plus the keys for the others. */
+	private void drawPalette(GuiGraphicsExtractor graphics) {
+		var font = Minecraft.getInstance().font;
+		var selected = CommanderView.selectedTower();
+		TowerDef def = TowerDefs.get(selected);
+		String price = def == null ? "?" : String.valueOf(def.cost());
+		graphics.text(font, "Build: " + selected.getPath() + " (" + price + " coins)", 6, 20, 0xFFFFFFFF);
+		StringBuilder keys = new StringBuilder();
+		for (int i = 0; i < CommanderView.TOWERS.size(); i++) {
+			keys.append(i == 0 ? "" : "   ").append('[').append(i + 1).append("] ").append(CommanderView.TOWERS.get(i).getPath());
+		}
+		graphics.text(font, keys.toString(), 6, 32, 0xFFAAAAAA);
 	}
 
 	private void panFromKeys(double dt) {
@@ -78,7 +96,7 @@ public class CommanderScreen extends Screen {
 	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
 		BlockHitResult hit = CommanderView.cursorHit();
 		if (event.button() == 0 && hit != null && hit.getDirection() == Direction.UP) {
-			ClientPlayNetworking.send(new PlaceMarkerPayload(hit.getBlockPos().above()));
+			ClientPlayNetworking.send(new PlaceTowerPayload(CommanderView.selectedTower(), hit.getBlockPos().above()));
 		}
 		return true;
 	}
@@ -87,6 +105,11 @@ public class CommanderScreen extends Screen {
 	public boolean keyPressed(KeyEvent event) {
 		if (CommanderView.isToggleKey(event)) {
 			onClose();
+			return true;
+		}
+		int digit = event.key() - InputConstants.KEY_1;
+		if (digit >= 0 && digit < CommanderView.TOWERS.size()) {
+			CommanderView.selectTower(digit);
 			return true;
 		}
 		held.add(event.key());

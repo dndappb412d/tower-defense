@@ -1,5 +1,8 @@
 {
 	"block.heartguard.heart": "Heart",
+	"block.heartguard.arrow_tower": "Arrow Tower",
+	"block.heartguard.cannon_tower": "Cannon Tower",
+	"block.heartguard.frost_tower": "Frost Tower",
 	"key.category.heartguard.main": "Heartguard",
 	"key.heartguard.toggle_commander": "Toggle Commander View"
 }

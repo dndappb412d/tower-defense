@@ -6,7 +6,7 @@ import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.match.MatchData;
-import dev.vadim.heartguard.placement.PlaceMarkerPayload;
+import dev.vadim.heartguard.placement.PlaceTowerPayload;
 import dev.vadim.heartguard.tower.TowerDefs;
 import dev.vadim.heartguard.wave.WaveSets;
 import dev.vadim.heartguard.placement.PlacementService;
@@ -22,10 +22,10 @@ public class Heartguard implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		PayloadTypeRegistry.serverboundPlay().register(PlaceMarkerPayload.TYPE, PlaceMarkerPayload.CODEC);
-		ServerPlayNetworking.registerGlobalReceiver(PlaceMarkerPayload.TYPE, (payload, context) -> {
-			PlacementService.Result result = PlacementService.tryPlace(context.player(), payload.pos());
-			LOGGER.debug("Place marker at {} for {}: {}", payload.pos(), context.player().getName().getString(), result);
+		PayloadTypeRegistry.serverboundPlay().register(PlaceTowerPayload.TYPE, PlaceTowerPayload.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(PlaceTowerPayload.TYPE, (payload, context) -> {
+			PlacementService.Result result = PlacementService.tryPlace(context.player(), payload.tower(), payload.pos());
+			LOGGER.debug("Place {} at {} for {}: {}", payload.tower(), payload.pos(), context.player().getName().getString(), result);
 		});
 		MatchData.init();
 		Coins.init();
