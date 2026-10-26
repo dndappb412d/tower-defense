@@ -32,6 +32,11 @@ All merged to `main`.
 - **Still on the overworld**, not an arena dimension.
 - **Not checked:** no GitHub Actions result seen yet, and the `minecraft-mcp` bridge is built but not wired in.
 
+## Milestone 4 in progress
+
+- **`m4-map` spike: GO.** In a real new world the datapack dimension `heartguard:arena` exists (flat generator with no layers, so it is void), a structure template written by `tools/gen_structure.py` loads from the datapack and places exactly, a player can be teleported in and the client follows, and a tower kills a mob there by itself. Finding: the server GameTest world has a fixed set of dimensions and does not include the arena, so arena tests are client tests.
+- universal-modder is installed (`um` 0.2.0) and its knowledge base was searched; the notes are summarised in `docs/tech-stack.md`.
+
 ## Next, proposed (milestone 4)
 
 Four mob types and a boss as data-driven vanilla mobs, tower HP with repair and wall breaking, a Sandbox mode, a next-wave preview, an arena dimension with one handcrafted map, win and lose screens, and a 15-wave Survival set.
