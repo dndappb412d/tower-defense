@@ -12,6 +12,10 @@ public final class MobAttachments {
 	public static final AttachmentType<Integer> HEART_DAMAGE = AttachmentRegistry.createPersistent(
 		Identifier.fromNamespaceAndPath(Heartguard.MOD_ID, "heart_damage"), Codec.INT);
 
+	/** HP of tower damage and wall breaking power of this mob. */
+	public static final AttachmentType<Integer> STRUCTURE_DAMAGE = AttachmentRegistry.createPersistent(
+		Identifier.fromNamespaceAndPath(Heartguard.MOD_ID, "structure_damage"), Codec.INT);
+
 	private MobAttachments() {}
 
 	/** Loads the class so the attachment type is registered before any world is read. */

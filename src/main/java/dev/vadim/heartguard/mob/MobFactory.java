@@ -1,7 +1,9 @@
 package dev.vadim.heartguard.mob;
 
 import dev.vadim.heartguard.Heartguard;
+import dev.vadim.heartguard.ai.BreakWallGoal;
 import dev.vadim.heartguard.ai.HeartSeekGoal;
+import dev.vadim.heartguard.ai.SapperGoal;
 import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.wave.WaveSpawner;
 import net.minecraft.core.BlockPos;
@@ -76,6 +78,7 @@ public final class MobFactory {
 		}
 
 		mob.setAttached(MobAttachments.HEART_DAMAGE, def.heartDamage());
+		mob.setAttached(MobAttachments.STRUCTURE_DAMAGE, def.structureDamage());
 	}
 
 	private static void set(Mob mob, Holder<Attribute> attribute, double value) {
@@ -93,7 +96,14 @@ public final class MobFactory {
 			mob.targetSelector.removeAllGoals(goal -> true);
 			mob.moveControl = new HeartFlightControl(mob, BASE_FLY_SPEED * def.speed());
 		}
-		HeartSeekGoal.attach(mob, heart, flies, def != null ? def.cruiseHeight() : HeartSeekGoal.CRUISE_HEIGHT);
+		boolean explodes = def != null && def.has(MobDef.Trait.EXPLODES);
+		HeartSeekGoal.attach(mob, heart, flies, def != null ? def.cruiseHeight() : HeartSeekGoal.CRUISE_HEIGHT, explodes);
+		if (def != null && def.has(MobDef.Trait.BREAKS_WALLS) && !flies) {
+			BreakWallGoal.attach(mob, heart, def.structureDamage());
+		}
+		if (explodes) {
+			SapperGoal.attach(mob, heart, def.structureDamage());
+		}
 		if (def != null && def.ability().isPresent()) {
 			mob.goalSelector.addGoal(2, new BossAbilityGoal(mob, def.name(), def.ability().get(), heart));
 		}

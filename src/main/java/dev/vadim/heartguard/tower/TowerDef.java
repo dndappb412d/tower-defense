@@ -15,11 +15,12 @@ import net.minecraft.util.StringRepresentable;
  *              { "upgrade_cost": 40, "damage": 6.0, "range": 14.0, "fire_interval_ticks": 16 } ] }
  * </pre>
  * Tier 1 is the first entry and costs {@code cost}; every later tier costs its own {@code upgrade_cost}. A tower has
- * one to {@link #MAX_TIERS} tiers. {@code kind} decides what the numbers mean: single target hits one mob for
+ * one to {@link #MAX_TIERS} tiers. Right-clicking a damaged tower with an empty hand restores {@code repair_hp} (default 10) for
+ * {@code repair_cost} coins (default 5). {@code kind} decides what the numbers mean: single target hits one mob for
  * {@code damage}; area hits every mob within {@code radius} of the target for {@code damage}; slow hits nothing but
  * slows every mob within {@code radius} by {@code slow_percent} for {@code slow_ticks}.
  */
-public record TowerDef(Kind kind, int cost, int sellRefundPercent, int hp, List<Tier> tiers) {
+public record TowerDef(Kind kind, int cost, int sellRefundPercent, int hp, int repairHp, int repairCost, List<Tier> tiers) {
 	public static final int MAX_TIERS = 3;
 
 	public enum Kind implements StringRepresentable {
@@ -66,6 +67,8 @@ public record TowerDef(Kind kind, int cost, int sellRefundPercent, int hp, List<
 		ExtraCodecs.POSITIVE_INT.fieldOf("cost").forGetter(TowerDef::cost),
 		Codec.intRange(0, 100).optionalFieldOf("sell_refund_percent", 70).forGetter(TowerDef::sellRefundPercent),
 		ExtraCodecs.POSITIVE_INT.fieldOf("hp").forGetter(TowerDef::hp),
+		ExtraCodecs.POSITIVE_INT.optionalFieldOf("repair_hp", 10).forGetter(TowerDef::repairHp),
+		ExtraCodecs.NON_NEGATIVE_INT.optionalFieldOf("repair_cost", 5).forGetter(TowerDef::repairCost),
 		Tier.CODEC.listOf().fieldOf("tiers").forGetter(TowerDef::tiers)
 	).apply(i, TowerDef::new)).validate(TowerDef::check);
 

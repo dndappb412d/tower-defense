@@ -87,7 +87,8 @@ public class CommanderScreen extends Screen {
 		}
 		TowerDef def = ClientTowers.get(block.towerId());
 		String name = block.towerId().getPath() + " tower, tier " + tower.tier() + (def == null ? "" : "/" + def.maxTier())
-			+ ", targets " + tower.targeting().name().toLowerCase(java.util.Locale.ROOT);
+			+ ", targets " + tower.targeting().name().toLowerCase(java.util.Locale.ROOT)
+			+ (def == null ? "" : ", hp " + tower.hp() + "/" + def.hp());
 		graphics.text(font, name, 6, 50, 0xFF9BE89B);
 		if (def != null) {
 			String upgrade = tower.tier() >= def.maxTier() ? "max tier" : "[U] upgrade " + def.tier(tower.tier() + 1).upgradeCost();

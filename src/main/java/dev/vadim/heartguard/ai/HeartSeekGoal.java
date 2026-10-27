@@ -42,14 +42,17 @@ public class HeartSeekGoal extends Goal {
 	/** Fliers go straight to the Heart through their move control instead of pathing over the ground. */
 	private final boolean flying;
 	private final double cruiseHeight;
+	/** A sapper does not hit the Heart, it blows up on it once. */
+	private final boolean explodes;
 	private int attackCooldown;
 	private int repathCooldown;
 
-	public HeartSeekGoal(Mob mob, Target target, boolean flying, double cruiseHeight) {
+	public HeartSeekGoal(Mob mob, Target target, boolean flying, double cruiseHeight, boolean explodes) {
 		this.mob = mob;
 		this.target = target;
 		this.flying = flying;
 		this.cruiseHeight = cruiseHeight;
+		this.explodes = explodes;
 		setFlags(EnumSet.of(Flag.MOVE, Flag.LOOK));
 	}
 
@@ -62,7 +65,11 @@ public class HeartSeekGoal extends Goal {
 	}
 
 	public static void attach(Mob mob, Target target, boolean flying, double cruiseHeight) {
-		mob.goalSelector.addGoal(PRIORITY, new HeartSeekGoal(mob, target, flying, cruiseHeight));
+		attach(mob, target, flying, cruiseHeight, false);
+	}
+
+	public static void attach(Mob mob, Target target, boolean flying, double cruiseHeight, boolean explodes) {
+		mob.goalSelector.addGoal(PRIORITY, new HeartSeekGoal(mob, target, flying, cruiseHeight, explodes));
 	}
 
 	@Override
@@ -125,6 +132,12 @@ public class HeartSeekGoal extends Goal {
 			mob.getNavigation().stop();
 			if (flying) {
 				mob.setDeltaMovement(mob.getDeltaMovement().scale(0.5));
+			}
+			if (explodes && mob.level() instanceof net.minecraft.server.level.ServerLevel level) {
+				target.damage(mob.getAttachedOrElse(MobAttachments.HEART_DAMAGE, HIT_DAMAGE));
+				StructureDamage.blast(level, mob, mob.position(), SapperGoal.BLAST_RADIUS, mob.getAttachedOrElse(MobAttachments.STRUCTURE_DAMAGE, 10));
+				StructureDamage.spend(level, mob);
+				return;
 			}
 			if (--attackCooldown <= 0) {
 				attackCooldown = ATTACK_INTERVAL;

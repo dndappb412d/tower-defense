@@ -26,7 +26,8 @@ import org.jspecify.annotations.Nullable;
  * </pre>
  * {@code armor} is natural armor: worn {@code equipment} adds its own on top (the brute above has 4 plus 8 from its
  * iron). {@code speed} multiplies the base's walking speed (for a flier, its flying speed); a flier crosses the map
- * {@code cruise_height} blocks above the Heart (default 8), so it clears walls lower than that. Traits switch behavior on:
+ * {@code cruise_height} blocks above the Heart (default 8), so it clears walls lower than that. {@code structure_damage}
+ * (default 10) is how hard it hits towers and walls: tower HP per hit, and wall break speed. Traits switch behavior on:
  * {@code flies} makes it ignore the maze and fly to the Heart, {@code boss} gives it a boss bar, and
  * {@code breaks_walls} and {@code explodes} are used by the pathing rules. A boss {@code ability} summons more mobs.
  */
@@ -39,6 +40,7 @@ public record MobDef(
 	double knockbackResistance,
 	double scale,
 	int heartDamage,
+	int structureDamage,
 	double cruiseHeight,
 	List<Trait> traits,
 	List<Gear> equipment,
@@ -91,6 +93,7 @@ public record MobDef(
 		Codec.doubleRange(0.0, 1.0).optionalFieldOf("knockback_resistance", 0.0).forGetter(MobDef::knockbackResistance),
 		Codec.doubleRange(0.25, 4.0).optionalFieldOf("scale", 1.0).forGetter(MobDef::scale),
 		ExtraCodecs.POSITIVE_INT.optionalFieldOf("heart_damage", HeartSeekGoal.HIT_DAMAGE).forGetter(MobDef::heartDamage),
+		ExtraCodecs.POSITIVE_INT.optionalFieldOf("structure_damage", 10).forGetter(MobDef::structureDamage),
 		Codec.doubleRange(1.0, 64.0).optionalFieldOf("cruise_height", HeartSeekGoal.CRUISE_HEIGHT).forGetter(MobDef::cruiseHeight),
 		Trait.CODEC.listOf().optionalFieldOf("traits", List.of()).forGetter(MobDef::traits),
 		Gear.CODEC.listOf().optionalFieldOf("equipment", List.of()).forGetter(MobDef::equipment),
