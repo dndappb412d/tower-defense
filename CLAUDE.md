@@ -91,7 +91,7 @@ Real play (gamemaster permission): `/heartguard play <map> [survival|sandbox]` b
 Verify automatically; do not ask the user to eyeball things a test can check.
 - Server logic: server GameTests in `src/gametest` (`@GameTest`).
 - Client behaviour (camera, screens, input): a `FabricClientGameTest` that drives the real client and asserts on state. Screenshots land in `build/run/clientGameTest/screenshots/` and should be looked at, but assertions carry the pass/fail.
-- Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display). The client suite takes about 6 minutes, most of it `FullLoopClientTest`, which plays the whole shipped Survival set (mine, shop, build, upgrade, three waves) and logs each wave as `[full loop]`.
+- Run `./gradlew build` and `./gradlew runClientGameTest` before pushing client changes. CI only runs `build` (client tests need a display). The client suite takes about 15 minutes, nearly all of it `FullLoopClientTest`, which plays the whole shipped Survival set (mine, shop, build, upgrade, rebuild lost towers, 15 waves) and logs each wave as `[full loop]`, then the hardest wave.
 - `BalanceGameTest` holds the rules the data files must obey (a wave pays for another tower, upgrades beat new towers, selling loses money, every upgrade is stronger). It cannot say the game is fun; the `[full loop]` log is where to read how hard the waves actually are.
 
 Commander controls: G toggles the view, WASD pans, scroll zooms, 1 to 3 pick the tower, left click builds, right click selects a tower, then U upgrades, X sells and T changes the targeting mode. During a wave the server only accepts these from a player standing within 4 blocks of a Command Post.

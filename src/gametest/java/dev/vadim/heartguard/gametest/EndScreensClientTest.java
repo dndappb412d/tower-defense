@@ -46,7 +46,8 @@ public class EndScreensClientTest implements FabricClientGameTest {
 
 			// Win: every wave cleared.
 			world.getServer().runOnServer(server -> {
-				for (int i = 0; i < 9; i++) {
+				// Clear every wave of the set: advance until the match is won.
+				for (int i = 0; i < 1000 && Match.get(server).phase() != Phase.WON; i++) {
 					Match.update(server, MatchData::advanced);
 				}
 			});
