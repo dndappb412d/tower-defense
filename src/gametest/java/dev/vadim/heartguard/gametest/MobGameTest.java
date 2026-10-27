@@ -253,7 +253,7 @@ public class MobGameTest {
 		context.setBlock(heart, dev.vadim.heartguard.block.ModBlocks.HEART);
 		FakeHeartTarget flyerTarget = new FakeHeartTarget(level, context.absolutePos(heart));
 		FakeHeartTarget walkerTarget = new FakeHeartTarget(level, context.absolutePos(heart));
-		MobDef.override(LOW_FLYER, new MobDef(EntityType.PHANTOM, "Low Flyer", 14.0, 1.0, 0.0, 0.0, 1.0, 6, 5.0, List.of(MobDef.Trait.FLIES), List.of(), java.util.Optional.empty()));
+		MobDef.override(LOW_FLYER, new MobDef(EntityType.PHANTOM, "Low Flyer", 14.0, 1.0, 0.0, 0.0, 1.0, 6, 10, 5.0, List.of(MobDef.Trait.FLIES), List.of(), java.util.Optional.empty()));
 		Entity flyer = spawn(context, LOW_FLYER, new BlockPos(2, 1, 4), flyerTarget);
 		Entity walker = spawn(context, BRUTE, new BlockPos(2, 1, 6), walkerTarget);
 
@@ -274,7 +274,7 @@ public class MobGameTest {
 		arena(context, -4, 12, -4, 8);
 		FakeHeartTarget target = new FakeHeartTarget(level, context.absolutePos(new BlockPos(10, 1, 0)));
 		target.active.set(false); // everything stays put; only the summoning is under test
-		MobDef.override(TEST_BOSS, new MobDef(EntityType.HUSK, "Test Boss", 100.0, 1.0, 0.0, 1.0, 1.0, 10, 8.0, List.of(MobDef.Trait.BOSS), List.of(),
+		MobDef.override(TEST_BOSS, new MobDef(EntityType.HUSK, "Test Boss", 100.0, 1.0, 0.0, 1.0, 1.0, 10, 10, 8.0, List.of(MobDef.Trait.BOSS), List.of(),
 			java.util.Optional.of(new MobDef.Ability(RUNNER, 2, 40, 4))));
 		Mob boss = (Mob) spawn(context, TEST_BOSS, new BlockPos(0, 1, 0), target);
 		boss.setNoAi(false);

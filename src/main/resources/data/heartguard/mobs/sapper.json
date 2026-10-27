@@ -1,0 +1,9 @@
+{
+	"base": "minecraft:creeper",
+	"name": "Sapper",
+	"health": 20,
+	"speed": 1.15,
+	"heart_damage": 25,
+	"structure_damage": 45,
+	"traits": ["explodes"]
+}

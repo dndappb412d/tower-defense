@@ -7,6 +7,7 @@
 	"knockback_resistance": 0.7,
 	"scale": 1.3,
 	"heart_damage": 12,
+	"structure_damage": 25,
 	"traits": ["breaks_walls"],
 	"equipment": [
 		{ "slot": "head", "item": "minecraft:iron_helmet" },

@@ -25,7 +25,51 @@ public final class TowerService {
 		NOT_ENOUGH_COINS
 	}
 
+	/** How close a player must stand to repair a tower by hand, in blocks. */
+	public static final double REPAIR_REACH = 6.0;
+
+	public enum RepairResult {
+		REPAIRED,
+		NOT_A_TOWER,
+		ALREADY_FULL,
+		NOT_ENOUGH_COINS,
+		TOO_FAR
+	}
+
 	private TowerService() {}
+
+	/** Hurts a tower. At 0 HP the tower is destroyed: the block goes and nothing is refunded. */
+	public static void damage(ServerLevel level, BlockPos pos, int amount) {
+		if (amount <= 0 || !(level.getBlockEntity(pos) instanceof TowerBlockEntity tower)) {
+			return;
+		}
+		int left = tower.hp() - amount;
+		if (left <= 0) {
+			level.destroyBlock(pos, false);
+		} else {
+			tower.setHp(left);
+		}
+	}
+
+	/** The player mends a tower by hand, paying its repair price: anyone may, owner or not, since it is the defence that gains. */
+	public static RepairResult repair(ServerPlayer player, BlockPos pos) {
+		ServerLevel level = player.level();
+		if (!(level.getBlockEntity(pos) instanceof TowerBlockEntity tower) || tower.def() == null) {
+			return RepairResult.NOT_A_TOWER;
+		}
+		if (pos.getCenter().distanceToSqr(player.position()) > REPAIR_REACH * REPAIR_REACH) {
+			return RepairResult.TOO_FAR;
+		}
+		TowerDef def = tower.def();
+		if (tower.hp() >= def.hp()) {
+			return RepairResult.ALREADY_FULL;
+		}
+		if (!Coins.spend(player, def.repairCost())) {
+			return RepairResult.NOT_ENOUGH_COINS;
+		}
+		tower.setHp(Math.min(def.hp(), tower.hp() + def.repairHp()));
+		return RepairResult.REPAIRED;
+	}
 
 	public static Result upgrade(ServerPlayer player, BlockPos pos) {
 		Result gate = check(player, pos);
