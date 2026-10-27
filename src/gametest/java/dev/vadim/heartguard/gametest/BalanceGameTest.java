@@ -1,5 +1,6 @@
 package dev.vadim.heartguard.gametest;
 
+import dev.vadim.heartguard.mob.MobDef;
 import dev.vadim.heartguard.tower.TowerDef;
 import dev.vadim.heartguard.tower.TowerDefs;
 import dev.vadim.heartguard.vein.VeinDef;
@@ -75,6 +76,90 @@ public class BalanceGameTest {
 			int mobs = waves.waves().get(i).spawns().stream().mapToInt(WaveSet.SpawnEntry::count).sum();
 			expect(context, mobs >= previous, "wave " + (i + 1) + " has " + mobs + " mobs, fewer than the wave before (" + previous + ")");
 			previous = mobs;
+		}
+		context.succeed();
+	}
+
+	// --- the shipped Survival set ---
+
+	private static WaveSet survival() {
+		return WaveSets.get(WaveSets.DEFAULT_ID);
+	}
+
+	private static boolean hasBoss(WaveSet.Wave wave) {
+		return wave.spawns().stream().anyMatch(e -> {
+			MobDef def = MobDef.get(e.mob());
+			return def != null && def.has(MobDef.Trait.BOSS);
+		});
+	}
+
+	private static boolean uses(WaveSet.Wave wave, String mob) {
+		return wave.spawns().stream().anyMatch(e -> e.mob().getPath().equals(mob) && e.mob().getNamespace().equals("heartguard"));
+	}
+
+	@GameTest
+	public void survivalIsALongRunWithBossesAtTenAndFifteen(GameTestHelper context) {
+		WaveSet waves = survival();
+		expect(context, waves.waves().size() >= 15 && waves.waves().size() <= 20, "survival has 15 to 20 waves, was " + waves.waves().size());
+		for (int i = 0; i < waves.waves().size(); i++) {
+			int number = i + 1;
+			boolean boss = number == 10 || number == 15;
+			expect(context, hasBoss(waves.waves().get(i)) == boss, "wave " + number + (boss ? " should have a boss" : " should not have a boss"));
+		}
+		expect(context, waves.unknownMobs().isEmpty(), "every wave names a mob that exists");
+		context.succeed();
+	}
+
+	@GameTest
+	public void mobsAreIntroducedOneAtATime(GameTestHelper context) {
+		WaveSet waves = survival();
+		int[] first = new int[4];
+		String[] kinds = {"brute", "flyer", "sapper", "warlord"};
+		for (int k = 0; k < kinds.length; k++) {
+			first[k] = -1;
+			for (int i = 0; i < waves.waves().size() && first[k] < 0; i++) {
+				if (uses(waves.waves().get(i), kinds[k])) {
+					first[k] = i + 1;
+				}
+			}
+			expect(context, first[k] > 0, "the survival set uses the " + kinds[k]);
+		}
+		expect(context, uses(waves.waves().get(0), "runner") && !uses(waves.waves().get(0), "brute"), "wave 1 is runners only");
+		expect(context, first[0] <= 3 && first[1] <= 5 && first[2] <= 7, "brutes by wave 3, flyers by 5, sappers by 7: " + first[0] + ", " + first[1] + ", " + first[2]);
+		expect(context, first[0] != first[1] && first[1] != first[2], "no two new kinds arrive in the same wave");
+		context.succeed();
+	}
+
+	@GameTest
+	public void survivalGetsHarderEveryWaveBossesAside(GameTestHelper context) {
+		WaveSet waves = survival();
+		double previous = 0.0;
+		for (int i = 0; i < waves.waves().size(); i++) {
+			double threat = 0.0;
+			for (WaveSet.SpawnEntry e : waves.waves().get(i).spawns()) {
+				MobDef def = MobDef.get(e.mob());
+				threat += e.count() * def.health() * (1.0 + def.armor() / 20.0);
+			}
+			expect(context, threat > previous, "wave " + (i + 1) + " has threat " + (int) threat + ", not more than the last ordinary wave (" + (int) previous + ")");
+			// A boss wave is a spike: the wave after it is measured against the last wave before it.
+			if (!hasBoss(waves.waves().get(i))) {
+				previous = threat;
+			}
+		}
+		context.succeed();
+	}
+
+	@GameTest
+	public void everySpawnPointIsOneTheMapHas(GameTestHelper context) {
+		for (var def : dev.vadim.heartguard.map.MapDef.all().values()) {
+			if (!def.waves().equals(WaveSets.DEFAULT_ID)) {
+				continue;
+			}
+			for (WaveSet.Wave wave : survival().waves()) {
+				for (WaveSet.SpawnEntry e : wave.spawns()) {
+					expect(context, e.spawn() < def.spawns().size(), "a survival wave uses spawn point " + e.spawn() + " but a map has only " + def.spawns().size());
+				}
+			}
 		}
 		context.succeed();
 	}

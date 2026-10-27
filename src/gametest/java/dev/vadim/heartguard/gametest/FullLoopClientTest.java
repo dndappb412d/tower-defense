@@ -37,13 +37,19 @@ import net.minecraft.world.level.block.Block;
  */
 public class FullLoopClientTest implements FabricClientGameTest {
 	private static final int MINE_TIMEOUT_TICKS = 1500;
-	private static final int WAVE_TIMEOUT_TICKS = 4000;
+	private static final int WAVE_TIMEOUT_TICKS = 9000;
 
 	private TestSingleplayerContext world;
 	private ClientGameTestContext context;
 	private BlockPos origin;
 	private final List<BlockPos> veins = new ArrayList<>();
 	private final List<BlockPos> towers = new ArrayList<>();
+	private final java.util.Map<BlockPos, Identifier> towerTypes = new java.util.HashMap<>();
+	/** Where the bot puts extra towers once everything it has is upgraded, beside the lane and clear of the veins and the shop. */
+	private static final int[][] SPOTS = {{-12, 8}, {12, 8}, {-8, -8}, {8, -8}, {-12, -8}, {12, -8}, {8, 8}, {-8, 9}, {4, -9}, {-4, -9}, {0, 10}};
+	private int nextSpot;
+	private int hardestWave;
+	private int hardestLoss;
 
 	@Override
 	public void runTest(ClientGameTestContext context) {
@@ -79,7 +85,7 @@ public class FullLoopClientTest implements FabricClientGameTest {
 
 				int total = WaveSets.active().waves().size();
 				world.getServer().runOnServer(server ->
-					Match.update(server, d -> MatchData.EMPTY.withHeart(heart).withSpawn(spawn).started(total).advanced()));
+					Match.update(server, d -> MatchData.EMPTY.withHeart(heart).withSpawn(spawn).withSpawn(spawn.offset(0, 0, 4)).started(total).advanced()));
 
 				// --- the waves ---
 				for (int wave = 1; wave <= total; wave++) {
@@ -90,6 +96,10 @@ public class FullLoopClientTest implements FabricClientGameTest {
 					log("wave " + wave + ": phase " + after + ", Heart " + heartHp() + "/" + MatchData.MAX_HEART_HP
 						+ " (was " + hpBefore + "), coins " + before + " -> " + coins());
 					context.takeScreenshot("loop-wave-" + wave);
+					if (hpBefore - heartHp() > hardestLoss) {
+						hardestLoss = hpBefore - heartHp();
+						hardestWave = wave;
+					}
 					check(after != Phase.LOST, "wave " + wave + " broke the Heart: the defences bought with this economy are not enough");
 					if (after == Phase.WON) {
 						break;
@@ -110,6 +120,7 @@ public class FullLoopClientTest implements FabricClientGameTest {
 				MatchData end = world.getServer().computeOnServer(Match::get);
 				check(end.phase() == Phase.WON, "the player should win the shipped Survival set, phase " + end.phase());
 				check(end.heartHp() > 0, "and the Heart should still stand");
+				log("hardest wave: " + (hardestLoss == 0 ? "none cost the Heart anything" : hardestWave + ", it cost " + hardestLoss + " Heart HP"));
 				log("won with the Heart at " + end.heartHp() + "/" + MatchData.MAX_HEART_HP + " and " + coins() + " coins unspent");
 				context.takeScreenshot("loop-won");
 			} finally {
@@ -230,7 +241,14 @@ public class FullLoopClientTest implements FabricClientGameTest {
 		context.waitTicks(5);
 		boolean placed = world.getServer().computeOnServer(server -> server.overworld().getBlockEntity(pos) instanceof TowerBlockEntity);
 		check(placed, "the " + tower.getPath() + " tower should have been built at " + pos + " (coins were " + before + ")");
-		towers.add(pos);
+		if (!towers.contains(pos)) {
+			towers.add(pos);
+		}
+		towerTypes.put(pos, tower);
+	}
+
+	private boolean standing(BlockPos pos) {
+		return world.getServer().computeOnServer(server -> server.overworld().getBlockEntity(pos) instanceof TowerBlockEntity);
 	}
 
 	private void upgrade(BlockPos pos) {
@@ -239,10 +257,16 @@ public class FullLoopClientTest implements FabricClientGameTest {
 	}
 
 	/**
-	 * What a sensible player does with the money between waves: the first break buys a cannon and a frost tower, later
-	 * ones upgrade whatever is cheapest to upgrade.
+	 * What a sensible player does with the money between waves: rebuild what was lost, buy a cannon and a frost tower after
+	 * the first wave, then keep upgrading the cheapest upgrade, and put up a new tower once nothing is left worth upgrading.
 	 */
 	private void spendOnDefences(int afterWave) {
+		for (BlockPos pos : List.copyOf(towers)) {
+			Identifier type = towerTypes.get(pos);
+			if (!standing(pos) && coins() >= cost(type)) {
+				build(type, pos);
+			}
+		}
 		if (afterWave == 1) {
 			if (coins() >= cost(TowerDefs.CANNON)) {
 				build(TowerDefs.CANNON, origin.offset(0, 0, 7));
@@ -251,7 +275,7 @@ public class FullLoopClientTest implements FabricClientGameTest {
 				build(TowerDefs.FROST, origin.offset(-8, 0, 5));
 			}
 		}
-		for (int round = 0; round < 6; round++) {
+		for (int round = 0; round < 30; round++) {
 			BlockPos best = null;
 			int bestCost = Integer.MAX_VALUE;
 			for (BlockPos tower : towers) {
@@ -261,10 +285,16 @@ public class FullLoopClientTest implements FabricClientGameTest {
 					bestCost = cost;
 				}
 			}
-			if (best == null) {
+			if (best != null) {
+				upgrade(best);
+				continue;
+			}
+			Identifier type = nextSpot % 4 == 2 ? TowerDefs.CANNON : nextSpot % 4 == 3 ? TowerDefs.FROST : TowerDefs.ARROW;
+			if (nextSpot >= SPOTS.length || coins() < cost(type)) {
 				break;
 			}
-			upgrade(best);
+			build(type, origin.offset(SPOTS[nextSpot][0], 0, SPOTS[nextSpot][1]));
+			nextSpot++;
 		}
 		log("defences before wave " + (afterWave + 1) + ": " + describeTowers() + ", coins left " + coins());
 	}

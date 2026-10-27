@@ -3,21 +3,133 @@
 		{
 			"clear_bonus": 40,
 			"spawns": [
-				{ "spawn": 0, "mob": "minecraft:husk", "count": 5, "interval_ticks": 40, "reward": 4 }
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 6, "interval_ticks": 40, "reward": 3 }
+			]
+		},
+		{
+			"clear_bonus": 50,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 8, "interval_ticks": 30, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:runner", "count": 4, "interval_ticks": 40, "delay_ticks": 100, "reward": 3 }
 			]
 		},
 		{
 			"clear_bonus": 60,
 			"spawns": [
-				{ "spawn": 0, "mob": "minecraft:husk", "count": 8, "interval_ticks": 30, "reward": 4 },
-				{ "spawn": 0, "mob": "minecraft:spider", "count": 3, "interval_ticks": 60, "delay_ticks": 100, "reward": 8 }
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 8, "interval_ticks": 30, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:runner", "count": 6, "interval_ticks": 30, "delay_ticks": 60, "reward": 3 },
+				{ "spawn": 0, "mob": "heartguard:brute", "count": 2, "interval_ticks": 90, "delay_ticks": 160, "reward": 8 }
 			]
 		},
 		{
-			"clear_bonus": 90,
+			"clear_bonus": 70,
 			"spawns": [
-				{ "spawn": 0, "mob": "minecraft:husk", "count": 12, "interval_ticks": 20, "reward": 4 },
-				{ "spawn": 0, "mob": "minecraft:vindicator", "count": 4, "interval_ticks": 50, "delay_ticks": 60, "reward": 15 }
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 10, "interval_ticks": 25, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:flyer", "count": 3, "interval_ticks": 60, "delay_ticks": 100, "reward": 7 },
+				{ "spawn": 0, "mob": "heartguard:brute", "count": 3, "interval_ticks": 80, "delay_ticks": 140, "reward": 8 }
+			]
+		},
+		{
+			"clear_bonus": 85,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 10, "interval_ticks": 25, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:runner", "count": 6, "interval_ticks": 25, "delay_ticks": 40, "reward": 3 },
+				{ "spawn": 0, "mob": "heartguard:brute", "count": 5, "interval_ticks": 70, "delay_ticks": 100, "reward": 8 },
+				{ "spawn": 1, "mob": "heartguard:flyer", "count": 4, "interval_ticks": 50, "delay_ticks": 80, "reward": 7 }
+			]
+		},
+		{
+			"clear_bonus": 100,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 15, "interval_ticks": 20, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 7, "interval_ticks": 55, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 4, "interval_ticks": 45, "delay_ticks": 100, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 3, "interval_ticks": 73, "delay_ticks": 160, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 115,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 18, "interval_ticks": 16, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:runner", "count": 8, "interval_ticks": 24, "delay_ticks": 40, "reward": 3 },
+				{ "spawn": 0, "mob": "heartguard:brute", "count": 8, "interval_ticks": 48, "delay_ticks": 80, "reward": 8 },
+				{ "spawn": 1, "mob": "heartguard:flyer", "count": 8, "interval_ticks": 36, "delay_ticks": 100, "reward": 7 },
+				{ "spawn": 0, "mob": "heartguard:sapper", "count": 4, "interval_ticks": 64, "delay_ticks": 200, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 130,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 22, "interval_ticks": 14, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 11, "interval_ticks": 39, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 8, "interval_ticks": 32, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 7, "interval_ticks": 50, "delay_ticks": 140, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 145,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 28, "interval_ticks": 12, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 12, "interval_ticks": 35, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 12, "interval_ticks": 26, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 9, "interval_ticks": 39, "delay_ticks": 120, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 140,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:warlord", "count": 1, "interval_ticks": 1, "delay_ticks": 200, "reward": 80 },
+				{ "spawn": 1, "mob": "heartguard:runner", "count": 34, "interval_ticks": 11, "reward": 3 },
+				{ "spawn": 0, "mob": "heartguard:brute", "count": 14, "interval_ticks": 32, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 1, "mob": "heartguard:flyer", "count": 14, "interval_ticks": 24, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 0, "mob": "heartguard:sapper", "count": 7, "interval_ticks": 41, "delay_ticks": 160, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 170,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 44, "interval_ticks": 8, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 20, "interval_ticks": 25, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 20, "interval_ticks": 18, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 14, "interval_ticks": 28, "delay_ticks": 120, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 185,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 53, "interval_ticks": 7, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 26, "interval_ticks": 22, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 22, "interval_ticks": 16, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 18, "interval_ticks": 23, "delay_ticks": 120, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 200,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 62, "interval_ticks": 6, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 34, "interval_ticks": 19, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 29, "interval_ticks": 14, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 22, "interval_ticks": 20, "delay_ticks": 120, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 215,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 73, "interval_ticks": 6, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 42, "interval_ticks": 16, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 36, "interval_ticks": 12, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 26, "interval_ticks": 17, "delay_ticks": 120, "reward": 6 }
+			]
+		},
+		{
+			"clear_bonus": 350,
+			"spawns": [
+				{ "spawn": 0, "mob": "heartguard:warlord", "count": 1, "interval_ticks": 1, "delay_ticks": 300, "reward": 80 },
+				{ "spawn": 1, "mob": "heartguard:warlord", "count": 1, "interval_ticks": 1, "delay_ticks": 900, "reward": 80 },
+				{ "spawn": 0, "mob": "heartguard:runner", "count": 87, "interval_ticks": 6, "reward": 3 },
+				{ "spawn": 1, "mob": "heartguard:brute", "count": 46, "interval_ticks": 14, "delay_ticks": 60, "reward": 8 },
+				{ "spawn": 0, "mob": "heartguard:flyer", "count": 41, "interval_ticks": 11, "delay_ticks": 80, "reward": 7 },
+				{ "spawn": 1, "mob": "heartguard:sapper", "count": 29, "interval_ticks": 16, "delay_ticks": 120, "reward": 6 }
 			]
 		}
 	]

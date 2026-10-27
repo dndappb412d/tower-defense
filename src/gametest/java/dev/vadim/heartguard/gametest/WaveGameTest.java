@@ -93,7 +93,7 @@ public class WaveGameTest {
 	public void theShippedWavesLoadFromTheDatapack(GameTestHelper context) {
 		WaveSet set = WaveSets.get(WaveSets.DEFAULT_ID);
 		expect(context, set != null, "heartguard:survival should be loaded from the mod data");
-		expect(context, set.waves().size() == 3, "survival ships 3 waves, was " + set.waves().size());
+		expect(context, set.waves().size() == 15, "survival ships 15 waves, was " + set.waves().size());
 		context.succeed();
 	}
 
