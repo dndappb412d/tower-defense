@@ -24,7 +24,8 @@
 			"dev.vadim.heartguard.gametest.MobGameTest",
 			"dev.vadim.heartguard.gametest.PathingGameTest",
 			"dev.vadim.heartguard.gametest.SandboxGameTest",
-			"dev.vadim.heartguard.gametest.WavePreviewGameTest"
+			"dev.vadim.heartguard.gametest.WavePreviewGameTest",
+			"dev.vadim.heartguard.gametest.EndScreensGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",
@@ -36,7 +37,8 @@
 			"dev.vadim.heartguard.gametest.ShopClientTest",
 			"dev.vadim.heartguard.gametest.FullLoopClientTest",
 			"dev.vadim.heartguard.gametest.MobsClientTest",
-			"dev.vadim.heartguard.gametest.ArenaClientTest"
+			"dev.vadim.heartguard.gametest.ArenaClientTest",
+			"dev.vadim.heartguard.gametest.EndScreensClientTest"
 		]
 	}
 }

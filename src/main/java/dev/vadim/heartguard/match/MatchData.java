@@ -19,7 +19,8 @@ import net.minecraft.resources.Identifier;
  * drives the spawn schedule, so a wave resumes correctly after a save and reload. {@code dimension} is where the
  * match is played (the overworld unless a map moved it to the arena); see {@link Match#level}. A {@code sandbox}
  * match is for trying things: the Heart cannot be hurt, the build phase never times out (waves start on command),
- * and the wave set repeats instead of ending in a win.
+ * and the wave set repeats instead of ending in a win. {@code map} is the map being played, so the end screen can offer
+ * to play it again.
  */
 public record MatchData(
 	Optional<BlockPos> heart,
@@ -31,7 +32,8 @@ public record MatchData(
 	int ticksLeft,
 	int waveTick,
 	Identifier dimension,
-	boolean sandbox
+	boolean sandbox,
+	Optional<Identifier> map
 ) {
 	/** Build-phase length before a wave starts on its own. Fixed until it moves into data files. */
 	public static final int BUILD_TICKS = 20 * 60;
@@ -68,10 +70,11 @@ public record MatchData(
 		Codec.INT.fieldOf("ticks_left").forGetter(MatchData::ticksLeft),
 		Codec.INT.optionalFieldOf("wave_tick", 0).forGetter(MatchData::waveTick),
 		Identifier.CODEC.optionalFieldOf("dimension", OVERWORLD).forGetter(MatchData::dimension),
-		Codec.BOOL.optionalFieldOf("sandbox", false).forGetter(MatchData::sandbox)
+		Codec.BOOL.optionalFieldOf("sandbox", false).forGetter(MatchData::sandbox),
+		Identifier.CODEC.optionalFieldOf("map").forGetter(MatchData::map)
 	).apply(i, MatchData::new));
 
-	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, OVERWORLD, false);
+	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, OVERWORLD, false, Optional.empty());
 
 	public static final AttachmentType<MatchData> ATTACHMENT = AttachmentRegistry.<MatchData>builder()
 		.persistent(CODEC)
@@ -90,30 +93,34 @@ public record MatchData(
 	}
 
 	private MatchData with(int heartHp, Phase phase, int wave, int ticksLeft, int waveTick) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
 	}
 
 	public MatchData withHeart(BlockPos pos) {
-		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
 	}
 
 	public MatchData withSpawn(BlockPos pos) {
 		List<BlockPos> next = new ArrayList<>(spawns);
 		next.add(pos);
-		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
 	}
 
 	public MatchData withoutSpawns() {
-		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
 	}
 
 	/** Moves where the match is played. The Heart and spawn positions are in that dimension. */
 	public MatchData withDimension(Identifier dimension) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
+	}
+
+	public MatchData withMap(Identifier map) {
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, Optional.of(map));
 	}
 
 	public MatchData withSandbox(boolean sandbox) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox, map);
 	}
 
 	/**
@@ -142,12 +149,12 @@ public record MatchData(
 
 	/** A fresh match of the given length: full Heart, wave 0, first build phase. Callers check {@link #checkStart()} first. */
 	public MatchData started(int totalWaves) {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0, dimension, sandbox);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0, dimension, sandbox, map);
 	}
 
 	/** Back to idle, keeping the Heart, spawn setup and dimension. */
 	public MatchData stopped() {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, dimension, false);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, dimension, false, map);
 	}
 
 	/** The Heart takes damage while a match runs; at 0 HP the match is lost. Damage outside a running match is ignored. */

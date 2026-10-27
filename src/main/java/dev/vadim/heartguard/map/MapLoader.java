@@ -143,7 +143,7 @@ public final class MapLoader {
 		Layout layout = build(arena, def, template, ARENA_ORIGIN);
 
 		WaveSets.setActive(def.waves());
-		Match.update(server, d -> MatchData.EMPTY.withHeart(layout.heart()).withDimension(ARENA_ID).withSandbox(sandbox));
+		Match.update(server, d -> MatchData.EMPTY.withHeart(layout.heart()).withDimension(ARENA_ID).withSandbox(sandbox).withMap(mapId));
 		for (BlockPos spawn : layout.spawns()) {
 			Match.update(server, d -> d.withSpawn(spawn));
 		}
