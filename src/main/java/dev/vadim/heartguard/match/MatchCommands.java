@@ -1,6 +1,7 @@
 package dev.vadim.heartguard.match;
 
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import dev.vadim.heartguard.map.MapDef;
 import dev.vadim.heartguard.map.MapLoader;
@@ -40,7 +41,7 @@ public final class MatchCommands {
 						.suggests((c, b) -> SharedSuggestionProvider.suggest(MapDef.all().keySet().stream().map(Identifier::getPath), b))
 						.executes(c -> play(c.getSource(), StringArgumentType.getString(c, "map"), "survival"))
 						.then(Commands.argument("mode", StringArgumentType.word())
-							.suggests((c, b) -> SharedSuggestionProvider.suggest(List.of("survival"), b))
+							.suggests((c, b) -> SharedSuggestionProvider.suggest(List.of("survival", "sandbox"), b))
 							.executes(c -> play(c.getSource(), StringArgumentType.getString(c, "map"), StringArgumentType.getString(c, "mode"))))))
 				.then(Commands.literal("leave").executes(c -> leave(c.getSource())))
 				.then(Commands.literal("shop").executes(c -> placeShop(c.getSource())))
@@ -48,6 +49,8 @@ public final class MatchCommands {
 					.then(Commands.literal("poor").executes(c -> placeVein(c.getSource(), ModBlocks.POOR_VEIN)))
 					.then(Commands.literal("rich").executes(c -> placeVein(c.getSource(), ModBlocks.RICH_VEIN))))
 				.then(Commands.literal("start").executes(c -> start(c.getSource())))
+				.then(Commands.literal("wave")
+					.then(Commands.argument("number", IntegerArgumentType.integer(1)).executes(c -> wave(c.getSource(), IntegerArgumentType.getInteger(c, "number")))))
 				.then(Commands.literal("skip").executes(c -> skip(c.getSource())))
 				.then(Commands.literal("stop").executes(c -> stop(c.getSource())))
 				.then(Commands.literal("status").executes(c -> status(c.getSource())))
@@ -85,8 +88,8 @@ public final class MatchCommands {
 
 	/** Starts a match of a map in the arena for the player who ran the command. */
 	private static int play(CommandSourceStack source, String mapName, String mode) {
-		if (!mode.equals("survival")) {
-			source.sendFailure(Component.literal("Unknown mode " + mode + " (available: survival)"));
+		if (!mode.equals("survival") && !mode.equals("sandbox")) {
+			source.sendFailure(Component.literal("Unknown mode " + mode + " (available: survival, sandbox)"));
 			return 0;
 		}
 		ServerPlayer player = source.getPlayer();
@@ -95,7 +98,7 @@ public final class MatchCommands {
 			return 0;
 		}
 		Identifier id = mapName.contains(":") ? Identifier.parse(mapName) : Identifier.fromNamespaceAndPath("heartguard", mapName);
-		MapLoader.PlayResult result = MapLoader.play(source.getServer(), player, id);
+		MapLoader.PlayResult result = MapLoader.play(source.getServer(), player, id, mode.equals("sandbox"));
 		if (result != MapLoader.PlayResult.STARTED) {
 			source.sendFailure(Component.literal("Cannot play " + id + ": " + result));
 			return 0;
@@ -146,6 +149,17 @@ public final class MatchCommands {
 			return 0;
 		}
 		Match.update(source.getServer(), d -> d.started(set.waves().size()));
+		return 1;
+	}
+
+	/** Sandbox: start wave {@code number} now. */
+	private static int wave(CommandSourceStack source, int number) {
+		MatchData before = Match.get(source.getServer());
+		MatchData after = Match.update(source.getServer(), d -> d.jumpedTo(number));
+		if (after.phase() != MatchData.Phase.WAVE || after.wave() != number || before.phase() == MatchData.Phase.WAVE) {
+			source.sendFailure(Component.literal("Cannot start wave " + number + ": needs a sandbox match between waves, with " + before.totalWaves() + " waves"));
+			return 0;
+		}
 		return 1;
 	}
 

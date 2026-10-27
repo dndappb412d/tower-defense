@@ -73,7 +73,7 @@ Map file (all positions relative to the template origin; `starting_coins` and `v
   "command_post": [50, 1, 23], "quartermaster": [50, 1, 17] }
 ```
 
-Real play (gamemaster permission): `/heartguard play <map> [survival]` builds the map in the arena and starts a match, `/heartguard leave` stops it and returns you. Dev commands, kept for tests: `/heartguard setheart | addspawn | clearspawns | shop | vein poor|rich | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
+Real play (gamemaster permission): `/heartguard play <map> [survival|sandbox]` builds the map in the arena and starts a match, `/heartguard leave` stops it and returns you. In `sandbox` the Heart cannot be hurt, the build phase waits, waves repeat, and `/heartguard wave <n>` starts wave n between waves. Dev commands, kept for tests: `/heartguard setheart | addspawn | clearspawns | shop | vein poor|rich | start | skip | stop | status`. They place the Heart and spawn points at the executor position, standing in for map metadata until milestone 4.
 
 ## Commands
 

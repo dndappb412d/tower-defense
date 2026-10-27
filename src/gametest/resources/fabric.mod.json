@@ -22,7 +22,8 @@
 			"dev.vadim.heartguard.gametest.TemplateGameTest",
 			"dev.vadim.heartguard.gametest.MapGameTest",
 			"dev.vadim.heartguard.gametest.MobGameTest",
-			"dev.vadim.heartguard.gametest.PathingGameTest"
+			"dev.vadim.heartguard.gametest.PathingGameTest",
+			"dev.vadim.heartguard.gametest.SandboxGameTest"
 		],
 		"fabric-client-gametest": [
 			"dev.vadim.heartguard.gametest.CommanderViewClientTest",

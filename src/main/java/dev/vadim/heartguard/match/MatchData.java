@@ -17,7 +17,9 @@ import net.minecraft.resources.Identifier;
  *
  * <p>{@code ticksLeft} counts down in the build and payout phases. {@code waveTick} counts up during a wave and
  * drives the spawn schedule, so a wave resumes correctly after a save and reload. {@code dimension} is where the
- * match is played (the overworld unless a map moved it to the arena); see {@link Match#level}.
+ * match is played (the overworld unless a map moved it to the arena); see {@link Match#level}. A {@code sandbox}
+ * match is for trying things: the Heart cannot be hurt, the build phase never times out (waves start on command),
+ * and the wave set repeats instead of ending in a win.
  */
 public record MatchData(
 	Optional<BlockPos> heart,
@@ -28,7 +30,8 @@ public record MatchData(
 	int totalWaves,
 	int ticksLeft,
 	int waveTick,
-	Identifier dimension
+	Identifier dimension,
+	boolean sandbox
 ) {
 	/** Build-phase length before a wave starts on its own. Fixed until it moves into data files. */
 	public static final int BUILD_TICKS = 20 * 60;
@@ -64,10 +67,11 @@ public record MatchData(
 		Codec.INT.optionalFieldOf("total_waves", 0).forGetter(MatchData::totalWaves),
 		Codec.INT.fieldOf("ticks_left").forGetter(MatchData::ticksLeft),
 		Codec.INT.optionalFieldOf("wave_tick", 0).forGetter(MatchData::waveTick),
-		Identifier.CODEC.optionalFieldOf("dimension", OVERWORLD).forGetter(MatchData::dimension)
+		Identifier.CODEC.optionalFieldOf("dimension", OVERWORLD).forGetter(MatchData::dimension),
+		Codec.BOOL.optionalFieldOf("sandbox", false).forGetter(MatchData::sandbox)
 	).apply(i, MatchData::new));
 
-	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, OVERWORLD);
+	public static final MatchData EMPTY = new MatchData(Optional.empty(), List.of(), MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, OVERWORLD, false);
 
 	public static final AttachmentType<MatchData> ATTACHMENT = AttachmentRegistry.<MatchData>builder()
 		.persistent(CODEC)
@@ -86,26 +90,41 @@ public record MatchData(
 	}
 
 	private MatchData with(int heartHp, Phase phase, int wave, int ticksLeft, int waveTick) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
 	}
 
 	public MatchData withHeart(BlockPos pos) {
-		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+		return new MatchData(Optional.of(pos), spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
 	}
 
 	public MatchData withSpawn(BlockPos pos) {
 		List<BlockPos> next = new ArrayList<>(spawns);
 		next.add(pos);
-		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+		return new MatchData(heart, next, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
 	}
 
 	public MatchData withoutSpawns() {
-		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+		return new MatchData(heart, List.of(), heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
 	}
 
 	/** Moves where the match is played. The Heart and spawn positions are in that dimension. */
 	public MatchData withDimension(Identifier dimension) {
-		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension);
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+	}
+
+	public MatchData withSandbox(boolean sandbox) {
+		return new MatchData(heart, spawns, heartHp, phase, wave, totalWaves, ticksLeft, waveTick, dimension, sandbox);
+	}
+
+	/**
+	 * Sandbox only: starts wave {@code number} (1-based, within the set) right now, from the build phase or the pause after
+	 * a wave. Returns this unchanged when that is not possible.
+	 */
+	public MatchData jumpedTo(int number) {
+		if (!sandbox || number < 1 || number > totalWaves || (phase != Phase.BUILD && phase != Phase.PAYOUT)) {
+			return this;
+		}
+		return with(heartHp, Phase.WAVE, number, 0, 0);
 	}
 
 	public StartCheck checkStart() {
@@ -123,17 +142,17 @@ public record MatchData(
 
 	/** A fresh match of the given length: full Heart, wave 0, first build phase. Callers check {@link #checkStart()} first. */
 	public MatchData started(int totalWaves) {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0, dimension);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.BUILD, 0, totalWaves, BUILD_TICKS, 0, dimension, sandbox);
 	}
 
 	/** Back to idle, keeping the Heart, spawn setup and dimension. */
 	public MatchData stopped() {
-		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, dimension);
+		return new MatchData(heart, spawns, MAX_HEART_HP, Phase.IDLE, 0, 0, 0, 0, dimension, false);
 	}
 
 	/** The Heart takes damage while a match runs; at 0 HP the match is lost. Damage outside a running match is ignored. */
 	public MatchData damaged(int amount) {
-		if (!running() || amount <= 0) {
+		if (!running() || amount <= 0 || sandbox) {
 			return this;
 		}
 		int next = Math.max(0, heartHp - amount);
@@ -156,9 +175,11 @@ public record MatchData(
 		return switch (phase) {
 			case BUILD -> with(heartHp, Phase.WAVE, wave + 1, 0, 0);
 			case WAVE -> with(heartHp, Phase.PAYOUT, wave, PAYOUT_TICKS, 0);
-			case PAYOUT -> wave >= totalWaves
-				? with(heartHp, Phase.WON, wave, 0, 0)
-				: with(heartHp, Phase.BUILD, wave, BUILD_TICKS, 0);
+			case PAYOUT -> sandbox
+				? with(heartHp, Phase.BUILD, wave >= totalWaves ? 0 : wave, 0, 0)
+				: wave >= totalWaves
+					? with(heartHp, Phase.WON, wave, 0, 0)
+					: with(heartHp, Phase.BUILD, wave, BUILD_TICKS, 0);
 			case IDLE, WON, LOST -> this;
 		};
 	}
@@ -166,7 +187,8 @@ public record MatchData(
 	/** One server tick. Build and payout count down and then advance; a wave counts up and ends elsewhere. */
 	public MatchData ticked() {
 		return switch (phase) {
-			case BUILD, PAYOUT -> ticksLeft <= 1 ? advanced() : with(heartHp, phase, wave, ticksLeft - 1, waveTick);
+			case BUILD -> sandbox ? this : ticksLeft <= 1 ? advanced() : with(heartHp, phase, wave, ticksLeft - 1, waveTick);
+			case PAYOUT -> ticksLeft <= 1 ? advanced() : with(heartHp, phase, wave, ticksLeft - 1, waveTick);
 			case WAVE -> with(heartHp, phase, wave, ticksLeft, waveTick + 1);
 			case IDLE, WON, LOST -> this;
 		};
