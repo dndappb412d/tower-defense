@@ -117,10 +117,14 @@ public class ArenaClientTest implements FabricClientGameTest {
 		check(coins() == MapLoader.SANDBOX_COINS, "sandbox coins, had " + coins());
 		context.waitTicks(40);
 		check(phase() == Phase.BUILD, "the build phase waits for the player");
+		var preview = previewOnClient();
+		check(!preview.isEmpty() && preview.wave() == 1, "the client shows a preview of wave 1 while building, was " + preview);
+		context.takeScreenshot("wave-preview");
 
 		run("heartguard wave 2");
 		MatchData running = world.getServer().computeOnServer(Match::get);
 		check(running.phase() == Phase.WAVE && running.wave() == 2, "wave 2 starts on command, was " + running.phase() + " " + running.wave());
+		check(previewOnClient().isEmpty(), "and the preview goes away while the wave runs");
 		world.getServer().runOnServer(server -> Match.damageHeart(server, 500));
 		check(world.getServer().computeOnServer(server -> Match.get(server).heartHp()) == MatchData.MAX_HEART_HP, "the Heart cannot be hurt");
 		run("heartguard wave 1");
@@ -133,6 +137,18 @@ public class ArenaClientTest implements FabricClientGameTest {
 		waitForClientDimension(MapLoader.ARENA);
 		check(!world.getServer().computeOnServer(server -> Match.get(server).sandbox()), "survival is not sandbox");
 		check(coins() == def.startingCoins(), "and starts with the map's coins");
+	}
+
+	private dev.vadim.heartguard.wave.WavePreview previewOnClient() {
+		dev.vadim.heartguard.wave.WavePreview shown = dev.vadim.heartguard.wave.WavePreview.NONE;
+		for (int tick = 0; tick < 40; tick++) {
+			shown = context.computeOnClient(mc -> dev.vadim.heartguard.client.WavePreviewHud.get());
+			if (!shown.isEmpty()) {
+				break;
+			}
+			context.waitTick();
+		}
+		return shown;
 	}
 
 	private void run(String command) {

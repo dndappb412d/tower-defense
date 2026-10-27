@@ -8,6 +8,7 @@ import dev.vadim.heartguard.economy.Rewards;
 import dev.vadim.heartguard.vein.Veins;
 import dev.vadim.heartguard.wave.WaveSet;
 import dev.vadim.heartguard.wave.WaveSets;
+import dev.vadim.heartguard.wave.WavePreviewSync;
 import dev.vadim.heartguard.wave.WaveSpawner;
 import java.util.function.UnaryOperator;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -44,6 +45,7 @@ public final class Match {
 		}
 		if (after.phase() != before.phase() || after.wave() != before.wave()) {
 			announce(server, after);
+			WavePreviewSync.broadcast(server);
 		}
 		return after;
 	}
