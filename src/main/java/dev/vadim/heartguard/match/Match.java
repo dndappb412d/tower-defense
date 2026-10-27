@@ -46,6 +46,7 @@ public final class Match {
 		if (after.phase() != before.phase() || after.wave() != before.wave()) {
 			announce(server, after);
 			WavePreviewSync.broadcast(server);
+			EndScreens.onPhase(server, before, after);
 		}
 		return after;
 	}

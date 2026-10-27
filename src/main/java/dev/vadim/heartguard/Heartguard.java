@@ -9,6 +9,7 @@ import dev.vadim.heartguard.mob.BossAbilityGoal;
 import dev.vadim.heartguard.mob.MobAttachments;
 import dev.vadim.heartguard.mob.MobDef;
 import dev.vadim.heartguard.map.ReturnPoint;
+import dev.vadim.heartguard.match.EndScreens;
 import dev.vadim.heartguard.match.Match;
 import dev.vadim.heartguard.match.MatchCommands;
 import dev.vadim.heartguard.match.MatchData;
@@ -70,6 +71,7 @@ public class Heartguard implements ModInitializer {
 		WaveSets.init();
 		TowerDefs.init();
 		Match.init();
+		EndScreens.init();
 		MatchCommands.init();
 		LOGGER.info("Heartguard initialized (common)");
 	}

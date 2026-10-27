@@ -172,6 +172,14 @@ public class FullLoopClientTest implements FabricClientGameTest {
 		while (!isDepleted(vein) && ticks < MINE_TIMEOUT_TICKS) {
 			context.waitTick();
 			ticks++;
+			// The victory screen opens when the last wave pays out, and it takes the mouse; dismiss it and carry on.
+			if (context.computeOnClient(mc -> mc.screen instanceof dev.vadim.heartguard.client.EndScreen)) {
+				context.runOnClient(mc -> mc.setScreen(null));
+				context.getInput().releaseMouse(0);
+				context.getInput().lookAt(vein);
+				context.waitTicks(2);
+				context.getInput().holdMouse(0);
+			}
 		}
 		context.getInput().releaseMouse(0);
 		check(isDepleted(vein), "the vein at " + vein + " should have been mined out within " + MINE_TIMEOUT_TICKS + " ticks; " + playerState());
