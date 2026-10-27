@@ -39,6 +39,9 @@ public final class MapLoader {
 	/** Where the template goes in the arena. The floor is at this height, so feet are one block above. */
 	public static final BlockPos ARENA_ORIGIN = new BlockPos(0, 64, 0);
 
+	/** Coins a sandbox player starts with: enough to try everything. */
+	public static final int SANDBOX_COINS = 10_000;
+
 	public enum PlayResult {
 		STARTED,
 		UNKNOWN_MAP,
@@ -108,6 +111,11 @@ public final class MapLoader {
 	 * the map's starting amount, and moves them in. Anything already running is stopped first.
 	 */
 	public static PlayResult play(MinecraftServer server, ServerPlayer player, Identifier mapId) {
+		return play(server, player, mapId, false);
+	}
+
+	/** As {@link #play(MinecraftServer, ServerPlayer, Identifier)}; a sandbox game has an invulnerable Heart, endless waves on command, and {@link #SANDBOX_COINS}. */
+	public static PlayResult play(MinecraftServer server, ServerPlayer player, Identifier mapId, boolean sandbox) {
 		MapDef def = MapDef.get(mapId);
 		if (def == null) {
 			return PlayResult.UNKNOWN_MAP;
@@ -135,14 +143,14 @@ public final class MapLoader {
 		Layout layout = build(arena, def, template, ARENA_ORIGIN);
 
 		WaveSets.setActive(def.waves());
-		Match.update(server, d -> MatchData.EMPTY.withHeart(layout.heart()).withDimension(ARENA_ID));
+		Match.update(server, d -> MatchData.EMPTY.withHeart(layout.heart()).withDimension(ARENA_ID).withSandbox(sandbox));
 		for (BlockPos spawn : layout.spawns()) {
 			Match.update(server, d -> d.withSpawn(spawn));
 		}
 		Match.update(server, d -> d.started(waves.waves().size()));
 
 		ReturnPoint.remember(player);
-		player.setAttached(Coins.BALANCE, def.startingCoins());
+		player.setAttached(Coins.BALANCE, sandbox ? SANDBOX_COINS : def.startingCoins());
 		player.teleport(new TeleportTransition(arena, Vec3.atBottomCenterOf(layout.playerStart()), Vec3.ZERO, 90.0F, 0.0F, TeleportTransition.DO_NOTHING));
 		return PlayResult.STARTED;
 	}

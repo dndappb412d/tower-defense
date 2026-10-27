@@ -102,9 +102,37 @@ public class ArenaClientTest implements FabricClientGameTest {
 			MatchData again = world.getServer().computeOnServer(Match::get);
 			check(again.phase() == Phase.BUILD && again.heartHp() == MatchData.MAX_HEART_HP && again.wave() == 0, "and starts a fresh match, was " + again.phase() + " with Heart " + again.heartHp());
 			check(coins() == def.startingCoins(), "with the starting coins again, had " + coins());
+			sandbox(def);
 			run("heartguard leave");
 			waitForClientDimension(Level.OVERWORLD);
 		}
+	}
+
+	/** Sandbox: lots of coins, a Heart that cannot fall, a build phase that waits, and any wave on command. */
+	private void sandbox(MapDef def) {
+		run("heartguard play meadow sandbox");
+		waitForClientDimension(MapLoader.ARENA);
+		MatchData start = world.getServer().computeOnServer(Match::get);
+		check(start.sandbox() && start.phase() == Phase.BUILD, "sandbox starts in the build phase, was " + start.phase());
+		check(coins() == MapLoader.SANDBOX_COINS, "sandbox coins, had " + coins());
+		context.waitTicks(40);
+		check(phase() == Phase.BUILD, "the build phase waits for the player");
+
+		run("heartguard wave 2");
+		MatchData running = world.getServer().computeOnServer(Match::get);
+		check(running.phase() == Phase.WAVE && running.wave() == 2, "wave 2 starts on command, was " + running.phase() + " " + running.wave());
+		world.getServer().runOnServer(server -> Match.damageHeart(server, 500));
+		check(world.getServer().computeOnServer(server -> Match.get(server).heartHp()) == MatchData.MAX_HEART_HP, "the Heart cannot be hurt");
+		run("heartguard wave 1");
+		check(world.getServer().computeOnServer(server -> Match.get(server).wave()) == 2, "a second wave cannot be started mid-wave");
+		context.takeScreenshot("sandbox-wave");
+
+		run("heartguard leave");
+		waitForClientDimension(Level.OVERWORLD);
+		run("heartguard play meadow survival");
+		waitForClientDimension(MapLoader.ARENA);
+		check(!world.getServer().computeOnServer(server -> Match.get(server).sandbox()), "survival is not sandbox");
+		check(coins() == def.startingCoins(), "and starts with the map's coins");
 	}
 
 	private void run(String command) {
